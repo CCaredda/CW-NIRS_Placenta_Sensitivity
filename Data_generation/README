@@ -1,0 +1,28 @@
+functions/process_optical_properties_skin_Fat_muscle_placenta.m
+Process optical properties of maternal abdomen (mua, mus, n, g)
+
+functions/get_epsilon.m
+Read absorption and molar extinction coefficient from txt files in the folder "spectra"
+
+
+
+process_StO2_LookupTable.m	
+Generate braodband spectra for the 8 detectors (SD source separation 1, 2, 3, 4, 5, 6, 7, 8 cm) for 3 subjects.
+The layer thicknesses corresponded to those of the Prospekt dataset (1st quartile, median and 3rd quartile of the distance to placenta).
+The varying parameters are: volume fraction of melanosome, Total hemoglobin concentration in placenta and muscle, Oxygen saturation in placenta and muscle
+
+
+
+plot_model.m
+Plot the modelled maternal abdomen using mcxpreview function
+
+model_Phantom.m
+Simulations of the multi-layered phantom using CYRIL
+
+
+Create_Lookup_Table.m
+Create lookup table of tissue sensitivity indexes for the 8 detectors (SD source separation 1, 2, 3, 4, 5, 6, 7, 8 cm).
+The varying parameters are the layer thicknesses (skin, adipose tissue, muscle), the volume fraction of melanosome, 
+the total hemoglobin concentration in placenta and muscle, and the oxygen saturation in placenta and muscle
+
+
