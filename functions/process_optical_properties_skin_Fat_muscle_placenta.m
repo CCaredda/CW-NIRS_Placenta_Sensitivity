@@ -7,15 +7,15 @@ function [opt] = process_optical_properties_skin_Fat_muscle_placenta(lambda,f_me
 
 
     %Find lambda values into w
-    w = readmatrix('spectra/lambda.txt');
+    w = readmatrix('../spectra/lambda.txt');
     [sharedVals,idx_w] = intersect(w,lambda,'stable');
     
-    mua = readmatrix('spectra/mua_H2O.txt');
+    mua = readmatrix('../spectra/mua_H2O.txt');
     mu_a_H2O = mua(idx_w);
     
     
     % Read the absorption coefficients [cm^-1] of fat from external file:
-    mua = readmatrix('spectra/mua_Fat.txt');
+    mua = readmatrix('../spectra/mua_Fat.txt');
     mu_a_fat = mua(idx_w);
 
     % Get extinction coefficient (in cm-.mol-1.L)

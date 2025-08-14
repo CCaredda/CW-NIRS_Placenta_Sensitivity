@@ -2,20 +2,20 @@ function [eps_hb,eps_hb02,eps_oxCCO,eps_redCCO] = get_epsilon(lambda)
 
 
 %Find lambda values into w
-w = readmatrix('spectra/lambda.txt');
+w = readmatrix('../spectra/lambda.txt');
 [sharedVals,idx_w] = intersect(w,lambda,'stable');
 
 %Hb
-eps = readmatrix('spectra/eps_Hb.txt');
+eps = readmatrix('../spectra/eps_Hb.txt');
 eps_hb = eps(idx_w);
 %HbO2
-eps = readmatrix('spectra/eps_HbO2.txt');
+eps = readmatrix('../spectra/eps_HbO2.txt');
 eps_hb02 = eps(idx_w);
 %oxCCO
-eps = readmatrix('spectra/eps_oxCCO.txt');
+eps = readmatrix('../spectra/eps_oxCCO.txt');
 eps_oxCCO = eps(idx_w);
 %redCCO
-eps = readmatrix('spectra/eps_redCCO.txt');
+eps = readmatrix('../spectra/eps_redCCO.txt');
 eps_redCCO = eps(idx_w);
 
 % %% Read the molar absorption coefficients [M^-1*cm^-1] of HbO2 and HHb from external file:
