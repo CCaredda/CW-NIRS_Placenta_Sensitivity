@@ -270,6 +270,8 @@ def process_SRS(A,SD_separations,comb,WAVELENGTHS,ext_coeffs_inv):
 
 
     #Calculate Concentration and StO2 with SRS
+    h = 6.3*1e-4
+    k_mua = 1 / (3 * (1 - (h * lambda_all(lambda)))) *  (log(10) * (srs_ss_30_50_c1(lambda))-(2/mean([30 50]))).^2;
     _C, _StO2, _k_mua = srs_values(np.squeeze(Attenuation_slope),
                                     WAVELENGTHS,
                                     ext_coeffs_inv,

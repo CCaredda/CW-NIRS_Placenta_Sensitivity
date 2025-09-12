@@ -415,304 +415,8 @@ def plot_detection_proba(title,Proba,Sensor_signal,SD_separations_mm, conf = dis
     plt.show()
 
 
-def plot_Tissue_sensitivity(Proba, title, det_mm, conf = display_config(), mode='Adipose vs Muscle',mode_display='',levels = [0,0,0,0], ft_label=12, ft_title=14):
 
 
-    #Init title
-    title += " - Source/Detector separation "+str(det_mm)+"mm"
-
-
-    #Colormaps
-    # cmap = cm.plasma
-    cmap = cm.jet
-    alpha = 1
-
-    #Detector
-    SD_separations_mm = np.arange(10,90,10)
-    id_det = np.where(SD_separations_mm==det_mm)[0].item()
-
-
-    #angle for vizualization
-    elev = 20
-    azim = 60
-    roll = 0
-
-    plt.rcParams.update({'font.size': ft_label})
-
-
-    #Mode adipose vs muscle
-    if(mode == 'Adipose vs Muscle'):
-        conf.id_adipose = np.arange(adipose_thickness_array.shape[0])
-        conf.id_muscle = np.arange(muscle_thickness_array.shape[0])
-
-        #title += "\n$HbT$ muscle "+str(HbT_muscle_array[conf.id_HbT_m])+ "$\mu Mol$ - $HbT$ placenta "+str(HbT_placenta_array[conf.id_HbT_p])+ "$\mu Mol$"+"\n$SatO_2$ muscle "+str(int(SatO2_muscle_array[conf.id_sat_m]*100))+ "% - $SatO_2$ placenta "+str(int(SatO2_placenta_array[conf.id_sat_p]*100))+ "%\n Thickness skin "+str(skin_thickness_array[conf.id_skin]) + " mm - Fitzpatrick skin type "+ convert_f_mel_Fitzpatrick_scale(f_melanosome[conf.id_mel])
-
-        title += "\nInfluence of adipose tissue and muscle thickness"
-
-        #meshgrid(y,x)
-        x = adipose_thickness_array
-        y = muscle_thickness_array
-
-        #labels
-        x_label = "Adipose thickness (mm)"
-        y_label = "Muscle thickness (mm)"
-
-        #Select proba
-        P_skin = 100*Proba[conf.id_skin, :,:, conf.id_sat_m, conf.id_sat_p, conf.id_mel, conf.id_HbT_m, conf.id_HbT_p, id_det, 0]
-
-        P_adipose = 100*Proba[conf.id_skin, :,:, conf.id_sat_m, conf.id_sat_p, conf.id_mel, conf.id_HbT_m, conf.id_HbT_p, id_det, 1]
-
-        P_muscle = 100*Proba[conf.id_skin, :,:, conf.id_sat_m, conf.id_sat_p, conf.id_mel, conf.id_HbT_m, conf.id_HbT_p, id_det, 2]
-
-        P_placenta = 100*Proba[conf.id_skin, :,:, conf.id_sat_m, conf.id_sat_p, conf.id_mel, conf.id_HbT_m, conf.id_HbT_p, id_det, 3]
-
-
-
-
-
-
-
-    #Mode HbT
-    if(mode == "HbT"):
-        conf.id_HbT_m = np.arange(HbT_muscle_array.shape[0])
-        conf.id_HbT_p = np.arange(HbT_placenta_array.shape[0])
-
-        # title += "\nThickness skin "+str(skin_thickness_array[conf.id_skin]) + "mm - Thickness adipose "+ str(adipose_thickness_array[conf.id_adipose])+ " mm" + "\n Thickness muscle "+str(muscle_thickness_array[conf.id_muscle])+" mm - Fitzpatrick skin type "+ convert_f_mel_Fitzpatrick_scale(f_melanosome[conf.id_mel]) + "\n$SatO_2$ muscle "+str(int(SatO2_muscle_array[conf.id_sat_m]*100))+ "% - $SatO_2$ placenta "+str(int(SatO2_placenta_array[conf.id_sat_p]*100))
-
-        title += "\nInfluence of muscle and placenta blood volume"
-
-        #meshgrid(y,x)
-        x = HbT_muscle_array
-        y = HbT_placenta_array
-
-
-        #labels
-        x_label = "$HbT$ in muscle (µM)"
-        y_label = "$HbT$ in placenta (µM)"
-
-
-        #Select proba
-        P_skin = 100*Proba[conf.id_skin, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, conf.id_mel, :,:, id_det, 0]
-
-        P_adipose = 100*Proba[conf.id_skin, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, conf.id_mel, :,:, id_det, 1]
-
-        P_muscle = 100*Proba[conf.id_skin, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, conf.id_mel, :,:, id_det, 2]
-
-        P_placenta = 100*Proba[conf.id_skin, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, conf.id_mel, :,:, id_det, 3]
-
-
-
-
-
-
-    #Mode skin
-    if(mode == "Skin"):
-        conf.id_skin = np.arange(skin_thickness_array.shape[0])
-        conf.id_mel = np.arange(f_melanosome.shape[0])
-
-        # title += "\nThickness adipose "+ str(adipose_thickness_array[conf.id_adipose])+ " mm" + "\n Thickness muscle "+str(muscle_thickness_array[conf.id_muscle])+" mm" + "\n$HbT$ muscle "+str(HbT_muscle_array[conf.id_HbT_m])+ "$\mu Mol$ - $HbT$ placenta "+str(HbT_placenta_array[conf.id_HbT_p])+ "$\mu Mol$"+"\n$SatO_2$ muscle "+str(int(SatO2_muscle_array[conf.id_sat_m]*100))+ "% - $SatO_2$ placenta "+str(int(SatO2_placenta_array[conf.id_sat_p]*100))+"%"
-
-        title += "\nInfluence of skin tone and thickness"
-
-        #meshgrid(y,x)
-        x = skin_thickness_array
-        y = f_melanosome
-
-
-        #labels
-        x_label = "Skin thickness (mm)"
-        y_label = "Melanosome volume fraction (%)"
-
-
-        #Select proba
-        P_skin = 100*Proba[:, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, :, conf.id_HbT_m, conf.id_HbT_p, id_det, 0]
-
-        P_adipose = 100*Proba[:, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, :, conf.id_HbT_m, conf.id_HbT_p, id_det, 1]
-
-        P_muscle = 100*Proba[:, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, :, conf.id_HbT_m, conf.id_HbT_p, id_det, 2]
-
-        P_placenta = 100*Proba[:, conf.id_adipose, conf.id_muscle, conf.id_sat_m, conf.id_sat_p, :, conf.id_HbT_m, conf.id_HbT_p, id_det, 3]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #Interpolation
-    Nb_interp = 10
-    x_interp = np.linspace(x[0],x[-1],Nb_interp)
-    y_interp = np.linspace(y[0],y[-1],Nb_interp)
-    T_y,T_x = np.meshgrid(y_interp,x_interp)
-
-
-    interp_skin = interpolate.RegularGridInterpolator((x, y),P_skin,bounds_error=False, fill_value=None)
-    interp_adipose = interpolate.RegularGridInterpolator((x, y),P_adipose,bounds_error=False, fill_value=None)
-    interp_muscle = interpolate.RegularGridInterpolator((x, y),P_muscle,bounds_error=False, fill_value=None)
-    interp_placenta = interpolate.RegularGridInterpolator((x, y),P_placenta,bounds_error=False, fill_value=None)
-
-
-    P_skin = interp_skin((T_x,T_y))
-    P_adipose = interp_adipose((T_x,T_y))
-    P_muscle = interp_muscle((T_x,T_y))
-    P_placenta = interp_placenta((T_x,T_y))
-
-
-
-
-
-
-    # Plot the surface
-
-    if(mode_display == '3d'):
-        fig = plt.figure()
-        plt.suptitle(title,fontsize=ft_title)
-
-        ax = fig.add_subplot(2,2,1,projection='3d')
-        ax.set_title("Skin",fontsize=ft_title)
-        surf = ax.plot_surface(T_x, T_y, P_skin, cmap=cmap, linewidth=0, antialiased=True,vmin = 0,vmax= 100,alpha=alpha)
-
-        # Customize the z axis.
-        ax.set_zlim(0, 100)
-        ax.set_xlabel(x_label,fontsize=ft_label)
-        ax.set_ylabel(y_label,fontsize=ft_label)
-        ax.view_init(elev, azim, roll)
-
-        ax = fig.add_subplot(2,2,2,projection='3d')
-        ax.set_title("Adipose tissue",fontsize=ft_title)
-        surf = ax.plot_surface(T_x, T_y, P_adipose, cmap=cmap, linewidth=0, antialiased=True,vmin = 0,vmax= 100,alpha=alpha)
-
-        # Customize the z axis.
-        ax.set_zlim(0, 100)
-        ax.set_xlabel(x_label,fontsize=ft_label)
-        ax.set_ylabel(y_label,fontsize=ft_label)
-        ax.view_init(elev, azim, roll)
-
-
-        ax = fig.add_subplot(2,2,3,projection='3d')
-        ax.set_title("Muscle",fontsize=ft_title)
-        surf = ax.plot_surface(T_x, T_y, P_muscle, cmap=cmap, linewidth=0, antialiased=True,vmin = 0,vmax= 100,alpha=alpha)
-
-        # Customize the z axis.
-        ax.set_zlim(0, 100)
-        ax.set_xlabel(x_label,fontsize=ft_label)
-        ax.set_ylabel(y_label,fontsize=ft_label)
-        ax.view_init(elev, azim, roll)
-
-        ax = fig.add_subplot(2,2,4,projection='3d')
-        ax.set_title("Placenta",fontsize=ft_title)
-        surf = ax.plot_surface(T_x, T_y, P_placenta, cmap=cmap, linewidth=0, antialiased=True,vmin = 0,vmax= 100,alpha=alpha)
-
-        # Customize the z axis.
-        ax.set_zlim(0, 100)
-        ax.set_xlabel(x_label,fontsize=ft_label)
-        ax.set_ylabel(y_label,fontsize=ft_label)
-        ax.view_init(elev, azim, roll)
-
-        plt.show()
-
-    else:
-
-
-        vmin = np.min([P_skin.min(),P_adipose.min(),P_muscle.min(),P_placenta.min()])
-        vmax = np.max([P_skin.max(),P_adipose.max(),P_muscle.max(),P_placenta.max()])
-        # vmin = 0
-
-        fig = plt.figure()
-        plt.suptitle(title,fontsize=ft_title)
-
-        plt.subplot(221)
-        plt.title("Skin",fontsize=ft_title)
-        if np.size(levels[0]) == 1:
-            im = plt.contourf(T_x, T_y,P_skin,cmap='plasma')
-        else:
-            im = plt.contourf(T_x, T_y,P_skin,cmap='plasma',levels=levels[0])
-
-        plt.xlabel(x_label,fontsize=ft_label)
-        plt.ylabel(y_label,fontsize=ft_label)
-        c=plt.colorbar(im)
-        c.set_label("Probability (%)")
-
-        plt.subplot(222)
-        plt.title("Adipose tissue",fontsize=ft_title)
-        if np.size(levels[1]) == 1:
-            im = plt.contourf(T_x, T_y,P_adipose,cmap='plasma')
-        else:
-            im = plt.contourf(T_x, T_y,P_adipose,cmap='plasma',levels=levels[1])
-        plt.xlabel(x_label,fontsize=ft_label)
-        plt.ylabel(y_label,fontsize=ft_label)
-        c=plt.colorbar(im)
-        c.set_label("Probability (%)")
-
-        plt.subplot(223)
-        plt.title("Muscle",fontsize=ft_title)
-        if np.size(levels[2]) == 1:
-            im = plt.contourf(T_x, T_y,P_muscle,cmap='plasma')
-        else:
-            im = plt.contourf(T_x, T_y,P_muscle,cmap='plasma',levels=levels[2])
-        plt.xlabel(x_label,fontsize=ft_label)
-        plt.ylabel(y_label,fontsize=ft_label)
-        c=plt.colorbar(im)
-        c.set_label("Probability (%)")
-
-
-        plt.subplot(224)
-        plt.title("Placenta",fontsize=ft_title)
-        if np.size(levels[3]) == 1:
-            im = plt.contourf(T_x, T_y,P_placenta,cmap='plasma')
-        else:
-            im = plt.contourf(T_x, T_y,P_placenta,cmap='plasma',levels=levels[3])
-        plt.xlabel(x_label,fontsize=ft_label)
-        plt.ylabel(y_label,fontsize=ft_label)
-        c=plt.colorbar(im)
-        c.set_label("Probability (%)")
-
-        plt.show()
-
-
-
-
-def calculate_mua(w,W,F,C_HbT,SatO2):
-
-    # unit in cm-1/Mol
-    path = main_path+"/simulations/spectra/"
-    wavelength = np.loadtxt(path+"lambda.txt")
-    eps_Hb = np.loadtxt(path+"eps_Hb.txt")
-    eps_HbO2 = np.loadtxt(path+"eps_HbO2.txt")
-
-    mua_W = np.loadtxt(path+"mua_H2O.txt")
-    mua_F = np.loadtxt(path+"mua_Fat.txt")
-
-    _eps_Hb = scipy.interpolate.interp1d(wavelength,eps_Hb, kind='cubic')(w)
-    _eps_HbO2 = scipy.interpolate.interp1d(wavelength,eps_HbO2, kind='cubic')(w)
-    _mua_W = scipy.interpolate.interp1d(wavelength,mua_W, kind='cubic')(w)
-    _mua_F = scipy.interpolate.interp1d(wavelength,mua_F, kind='cubic')(w)
-
-    #Calculate absorption coefficient
-    mua_placenta = W*_mua_W + F*_mua_F + np.log(10)*C_HbT*(1-SatO2)*_eps_Hb + np.log(10)*C_HbT*SatO2*_eps_HbO2 #cm-1
-
-    mua_placenta = 0.1*mua_placenta # convert into mm-1
-
-    return mua_placenta
 
 
 
@@ -762,19 +466,11 @@ def calculate_scanning_proba(val_skin_mm, val_adipose_mm, val_muscle_mm, device_
     return Scanning_proba_muscle, Scanning_proba_placenta
 
 
-## Plots thickness distribution
+
+
+
+## Read data measured by he clinical team
 ft = 16
-
-
-# device_name = "Mini CYRIL"
-device_name = "CYRIL"
-
-
-title_distrib = "sensitivity indexes"
-# title_distrib = "scanning probability"
-
-
-
 
 # Extract thickness from segmentation files
 info_thickness = info_subject()
@@ -840,12 +536,33 @@ print("Muscle (mm)",int(np.percentile(t_muscle,25)*10),int(np.percentile(t_muscl
 print("Distance to placenta (mm)",int(np.percentile(dist_to_placenta,25)*10),int(np.percentile(dist_to_placenta,50)*10),int(np.percentile(dist_to_placenta,75)*10),int(np.percentile(dist_to_placenta,90)*10))
 
 
-##
+
+#Save data
+np.savetxt(main_path+"Subject_info/dist_to_placenta_cm.txt",dist_to_placenta)
+np.savetxt(main_path+"Subject_info/t_skin_cm.txt",t_skin)
+np.savetxt(main_path+"Subject_info/t_adipose_cm.txt",t_adipose)
+np.savetxt(main_path+"Subject_info/t_muscle_cm.txt",t_muscle)
+
+np.savetxt(main_path+"Subject_info/Fitzpatrick_scale.txt",Fitzpatrick)
+np.savetxt(main_path+"Subject_info/Gestation_subjects_weeks.txt",Gestation_subjects)
+
+
+
+## Plot data
+
+t_skin = np.loadtxt(main_path+"Subject_info/t_skin_cm.txt")
+t_adipose = np.loadtxt(main_path+"Subject_info/t_adipose_cm.txt")
+t_muscle = np.loadtxt(main_path+"Subject_info/t_muscle_cm.txt")
+
+Fitzpatrick = np.loadtxt(main_path+"Subject_info/Fitzpatrick_scale.txt")
+Gestation_subjects = np.loadtxt(main_path+"Subject_info/Gestation_subjects_weeks.txt")
+dist_to_placenta = np.loadtxt(main_path+"Subject_info/dist_to_placenta_cm.txt")
 
 info = []
 info.append(t_skin)
 info.append(t_adipose)
 info.append(t_muscle)
+
 
 ft = 22
 plt.close('all')
@@ -901,72 +618,8 @@ plt.yticks(fontsize=ft)
 plt.show()
 
 
-## Load and Plot tissue sensitivity data
+## Load and Plot tissue sensitivity data Monte Carlo simulations
 
-device_name = "CYRIL"
-# device_name = "Mini CYRIL"
-
-#Save tissue sensitivity
-data = np.load(main_path+"simulations/tissue_sensitivity.npz")
-
-
-
-Tissue_sensitivity_indexes = data['Tissue_sensitivity_indexes']
-skin_thickness_array = data['skin_thickness_array']
-adipose_thickness_array = data['adipose_thickness_array']
-muscle_thickness_array = data['muscle_thickness_array']
-SatO2_muscle_array = data['SatO2_muscle_array']
-SatO2_placenta_array = data['SatO2_placenta_array']
-f_melanosome = data['f_melanosome']
-HbT_muscle_array = data['HbT_muscle_array']
-HbT_placenta_array = data['HbT_placenta_array']
-SD_separation_cm = data['SD_separation_cm']
-
-
-
-# Plot tissue sensitivity
-
-
-#Get median thicknesses and fmel config
-config = get_thickness_indexes(50)
-
-config.id_HbT_m = 1
-config.id_HbT_p = 1
-config.id_sat_p = 2
-config.id_sat_m = 1
-
-det_mm = 30
-
-mode_display = ''
-
-# mode = 'Adipose vs Muscle'
-mode = 'HbT'
-# mode = 'Skin'
-
-#set levels
-if mode == 'Adipose vs Muscle':
-    levels = [] #0 is auto level
-    levels.append(0) #skin
-    levels.append(np.arange(0,110,10)) #Adipose tissue
-    levels.append(np.arange(0,110,10)) #Muscle
-    levels.append(np.arange(0,110,10)) #Placenta
-if mode == 'HbT':
-    levels = [0,0,0,0]
-
-if mode == 'Skin':
-    levels = [0,0,0,0]
-
-
-plt.close('all')
-ft_label= 16
-ft_title = 18
-plot_Tissue_sensitivity(Tissue_sensitivity_indexes, "Tissue sensitivity", det_mm, conf = config, mode = mode,mode_display = mode_display, levels = levels, ft_label=ft_label, ft_title=ft_title)
-
-
-## Load and Plot tissue sensitivity data v2
-
-device_name = "CYRIL"
-# device_name = "Mini CYRIL"
 
 #Save tissue sensitivity
 data = np.load(main_path+"simulations/tissue_sensitivity.npz")
@@ -1051,10 +704,46 @@ plt.show()
 
 
 
-## Load and Plot detection probabilities v2
+
+
+
+## Compare MCX and redbird data
+
+# Load redbird data
+wavelength = 780
+path_data = main_path+"simulations/Redbird/data_article_"+str(wavelength)+"/"
+data = scipy.io.loadmat(path_data+
+'out_St_muscle_0.6_St_placenta_0.8' +
+'_Thick_skin_1' +
+'_Thick_adipose_2' +
+'_Thick_muscle_7' +
+'f_mel0.0255'+
+'_HbT_muscle_umol_25'+
+'_HbT_placenta_umol_25.mat')
+
+
+redbird = data['Sensitivity_indexes']
+
+#Load mcx data
+path_data = main_path+ "simulations/output_lookup_table/"
+data = scipy.io.loadmat(path_data+
+'out_St_muscle_0.6_St_placenta_0.8' +
+'_Thick_skin_1' +
+'_Thick_adipose_2' +
+'_Thick_muscle_7' +
+'f_mel0.0255'+
+'_HbT_muscle_umol_25'+
+'_HbT_placenta_umol_25.mat')
+
+
+mcx = data['Sensitivity_indexes']
+
+print(redbird)
+print(mcx[3:6,:])
+
+## Load and Plot detection probabilities Monte Carlo simulations
 plt.close('all')
 
-# device_name = "CYRIL"
 device_name = "Mini CYRIL"
 
 ft_label= 16
@@ -1207,9 +896,6 @@ for id_mel in range(3):
 plt.show()
 
 
-# mup_min=np.array([0.01481771, -0.46458202, -0.18996804, -0.77454701, -0.24943377,-0.86297867])
-
-
 ## Process scanning probability with ultrasound measurements
 
 device_name = "Mini CYRIL"
@@ -1218,8 +904,6 @@ device_name = "Mini CYRIL"
 
 # title_distrib = "sensitivity indexes"
 title_distrib = "scanning probability"
-
-
 
 
 # Extract thickness from segmentation files
@@ -2425,32 +2109,6 @@ plt.show()
 
 
 
-## Plot mua placenta muscle
-
-w = np.arange(780,901)
-mua_placenta_80 = calculate_mua(w,0.85,0,50e-6,80)
-mua_placenta_40 = calculate_mua(w,0.85,0,50e-6,40)
-
-mua_muscle_80 = calculate_mua(w,0.76,0,50e-6,80)
-mua_muscle_40 = calculate_mua(w,0.76,0,50e-6,40)
-
-lw = 3
-
-plt.close('all')
-plt.figure()
-plt.plot(w, mua_placenta_80,linewidth=lw,label = "$\mu_a$ placenta ($SatO_2=80 \%$)")
-plt.plot(w, mua_placenta_40,linewidth=lw,label = "$\mu_a$ placenta ($SatO_2=40 \%$)")
-
-# plt.plot(w, mua_muscle_80, 'r:')
-# plt.plot(w, mua_muscle_40, 'b:')
-# plt.yscale('log')
-plt.grid()
-plt.xlabel("Wavelength (nm)",fontsize=ft)
-plt.ylabel("Absorption coefficient (cm$^{-1}$)",fontsize=ft)
-plt.legend(loc="best",fontsize=ft)
-plt.title("Absorption coefficient of the placenta for different $SatO_2$ values",fontsize=ft)
-plt.xlim(780,900)
-plt.show()
 
 ## Plot MC noise
 

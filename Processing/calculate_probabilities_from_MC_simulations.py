@@ -187,11 +187,6 @@ def get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured,d
     return mup_min, np.sqrt(mup_min), binned_signal.mean(axis=1)
 
 
-
-def get_Photon_counts(dr,A,T_exp,wavelength_mm,S):
-    return 50.34*A*T_exp*wavelength_mm*S*dr
-
-
 ## Load simulation data
 
 path = main_path+ "simulations/output_lookup_table/"
@@ -274,34 +269,11 @@ for t_s in range(skin_thickness_array.shape[0]):
 
 
 
-#Constants for converting diffuse reflectance in photons count
-# Light source power (in W
-Light_power_W = 1
 
-# sensor area in mm2
-Sensor_area_mm2 = 1e3
-
-# wavelength in mm
-wavelength_mm = wavelength*1e-3
-
-
-
-
-
-
-
-# Load simulation of phantom measurements
-
-# Load phantom
-path = main_path + "simulations/"
-data_phantom = scipy.io.loadmat(path+'out_Phantom.mat')
-dr_phantom = data_phantom['Diffuse_reflectance']
 
 
 
 #Load Monte Carlo noise of diffuse reflectance
-
-
 files = glob.glob(main_path+"simulations/MC_noise_1GPU/*.mat")
 
 dr_array = []
@@ -314,10 +286,7 @@ sigma_MC_noise_dr = dr_array.std(axis=0)
 
 
 
-
-
-
-## Load experimental measurements with CYRIL and Mini CYRIL
+## Load experimental measurements with Mini CYRIL
 path = main_path + "Phantoms/PhantomDataMiniCYRIL/"
 
 SD_separations_cm_Mini_CYRIL = np.array([3,4,5])
@@ -388,68 +357,21 @@ for j in range(integration_time_s_Mini_CYRIL.shape[0]):
 
 
 
-# Load experimental measurements with CYRIL
-
-#Path
-path = main_path + "Phantoms/phantom_4mmL2L1L3__151223_113128/"
-
-# Wavelength
-CYRIL_wavelength = np.genfromtxt(main_path+"/raw_wavelengths.csv", delimiter=",")
-
-#Integration time
-integration_time_s_CYRIL = np.array([1])
-
-#Source detector separation
-detector_id = np.array([1,8,2,7,3,6,4,5]) #disposition of the detectors for SD_separations
-SD_separations_mm_CYRIL = np.arange(10, detector_id.shape[0]*10+1, 10)
-
-
-#Load intensity spectra (size: k, T, N), k: nb of detector, T: time, N: nb of wavelength
-Intensity_measured_CYRIL = []
-
-i = 0
-for det_id in detector_id:
-    file_path = glob.glob(path+"/Spectra/*"+str(det_id)+".csv")[0]
-    I = np.genfromtxt(file_path, delimiter=",")
-
-
-    #Get intensity at specific wavelength
-    I_interp = np.array([])
-    for t in range(I.shape[0]):
-        I_interp = np.append(I_interp, interpolate.interp1d(CYRIL_wavelength,I[t,:], kind='cubic')(wavelength))
-
-    Intensity_measured_CYRIL.append(I_interp)
-
-#Convert list in ndarray
-Intensity_measured_CYRIL = np.asarray(Intensity_measured_CYRIL)
-temp = []
-temp.append(Intensity_measured_CYRIL)
-Intensity_measured_CYRIL = temp.copy()
-
-
-
 ## Save tissue sensitivity indexes
 
+# Use Mini CYRIL
+device_name = "Mini_CYRIL"
+integration_time_s = integration_time_s_Mini_CYRIL.copy()
+Intensity_measured = Intensity_measured_Mini_CYRIL.copy()
+SD_separations_mm = SD_separations_mm_Mini_CYRIL.copy()
 
-# # Use Mini CYRIL
-# device_name = "Mini_CYRIL"
-# integration_time_s = integration_time_s_Mini_CYRIL.copy()
-# Intensity_measured = Intensity_measured_Mini_CYRIL.copy()
-# SD_separations_mm = SD_separations_mm_Mini_CYRIL.copy()
 
-
-#Use CYRIL
-device_name = "CYRIL"
-integration_time_s = integration_time_s_CYRIL.copy()
-Intensity_measured = Intensity_measured_CYRIL.copy()
-SD_separations_mm = SD_separations_mm_CYRIL.copy()
 
 #Match detectors measured and simulated
 id_det_simu = np.array([])
 for i in SD_separations_mm:
     id_det_simu = np.append(id_det_simu,np.where(i==SD_separations_mm_simulation)[0].item())
 id_det_simu = id_det_simu.astype(int)
-
 
 
 
@@ -482,6 +404,13 @@ SD_separation_cm = SD_separations_mm/10
 )
 
 ## Get minimum sensitivity threshold (normalize diffuse reflectance) - Mini CYRIL
+
+# Load simulation of phantom measurements
+# Load phantom
+path = main_path + "simulations/"
+data_phantom = scipy.io.loadmat(path+'out_Phantom.mat')
+dr_phantom = data_phantom['Diffuse_reflectance']
+
 
 lw = 5
 ft = 18
@@ -638,6 +567,14 @@ plt.show()
 
 ## Calculate the detection probability
 
+# Load simulation of phantom measurements
+# Load phantom
+path = main_path + "simulations/"
+data_phantom = scipy.io.loadmat(path+'out_Phantom.mat')
+dr_phantom = data_phantom['Diffuse_reflectance']
+
+
+
 # Use Mini CYRIL
 device_name = "Mini CYRIL"
 integration_time_s = integration_time_s_Mini_CYRIL.copy()
@@ -770,20 +707,3 @@ for binning in np.array([1,10]):
         HbT_placenta_array = HbT_placenta_array,
         SD_separation_cm = SD_separations_mm/10
         )
-
-
-
-##
-
-
-sample = np.random.normal(loc = -10,
-                        scale = 10,
-                        size = (1000))
-# Process T-tests
-t,p = scipy.stats.ttest_1samp(sample,0,
-                            alternative='greater')
-
-print(1-p)
-plt.close('all')
-plt.hist(sample)
-plt.show()
