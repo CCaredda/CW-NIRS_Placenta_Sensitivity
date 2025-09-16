@@ -16,20 +16,11 @@ function [Sensitivity_indexes] = get_sensitivity_index(cfg, sensitivity_profile,
 
     Sensitivity_indexes = zeros(length(cfg.detectors_SD_mm),size(tissue_idx,1));
 
-    [xi, yi, zi] = meshgrid(0.5:cfg.xdim_mm-0.5, 0.5:cfg.ydim_mm-0.5, 0.5:cfg.zdim_mm-0.5);
-    for sd=1:size(sensitivity_profile,2)
-
-        %interpolate volume to sensitivity profile of shape (xdim, ydim, zdim)
-        vphi = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), sensitivity_profile(:,sd), xi, yi, zi);
-
-
-        %Normalize by the sum to get the density
-        %probability
-        vphi = vphi/sum(vphi,"all");
+    for sd=1:length(cfg.detectors_SD_mm)
 
         %Get sensitivity indexes
         for m=1:size(tissue_idx,1)
-            Sensitivity_indexes(sd,m) = sum(vphi(:, :, tissue_idx(m,1):tissue_idx(m,2)),"all");
+            Sensitivity_indexes(sd,m) = sum(sensitivity_profile(:, :, tissue_idx(m,1):tissue_idx(m,2), sd),"all");
         end
     end
 

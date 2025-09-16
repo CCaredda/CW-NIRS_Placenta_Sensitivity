@@ -62,16 +62,20 @@ optical_prop.n_placenta=1.37;
 %Create 4 layers volume
 cfg = create_meshed_volume_4layers(xdim_mm, ydim_mm, zdim_mm, thickness_layers_mm, max_vol_mesh, detectors_SD_mm, display);
 
+%Model fiber detector
+cfg.radius_fiber_det_mm = 2.3;
+cfg.reso_detector_mm = 0.1;
+
 %Get Sensitivity indexes for the 4 layers
 fprintf(1,strcat('Calculating sensitivity index\n'));
 
 %Calculate sensisitivity profile
-[sensitivity_profile, Diffuse_reflectance] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Diffuse_reflectance, Fluence_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
 
 %Calculate sensiticity indexes
 Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
 
 
-save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Diffuse_reflectance','Sensitivity_indexes');
+save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Diffuse_reflectance','Sensitivity_indexes', 'Fluence_at_fiber_detector');
 
 

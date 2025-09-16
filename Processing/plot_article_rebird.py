@@ -9,6 +9,7 @@ from scipy import interpolate
 import pandas as pd
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
+from numpy.linalg import lstsq
 
 main_path = "/home/caredda/Videos/PROSPEKT/"
 
@@ -209,10 +210,38 @@ def get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured,d
 
 
 
+def get_detection_proba(scaled_dr, sigma_p_phantom_detector, mu_p_min_detector):
+
+    # Detection probability
+    sample = np.random.normal(loc = scaled_dr,
+                                scale = sigma_p_phantom_detector,
+                                size = (1000))
+    # Process T-tests
+    t,p = scipy.stats.ttest_1samp(sample,mu_p_min_detector,
+                                alternative='greater')
+    return 1-p #Proba to accept alternative hypothesis
 
 
 
+def SRS(Attenuation,SD_separations_in_mm,WAVELENGTHS,ext_coeffs_inv):
 
+    #Calculate attenuation slope
+    A_slope = (Attenuation[1, :] - Attenuation[0, :]) / (SD_separations_in_mm[1] - SD_separations_in_mm[0])
+
+
+    #Calculate kmua
+    h = 6.3*1e-4
+    k_mua = (1 / (3 * (1 - (h * WAVELENGTHS))) )*  ((np.log(10) * A_slope -(2/np.mean(SD_separations_in_mm)))**2)
+
+    #Get StO2
+    kC = ext_coeffs_inv @ k_mua
+    _StO2 = 100*(kC[1]/(kC[0]+kC[1]))
+
+    if _StO2>100:
+        _StO2 = 100
+    if _StO2<0:
+        _StO2 = 0
+    return _StO2
 
 ## Read data measured by he clinical team
 
@@ -292,7 +321,7 @@ np.savetxt(main_path+"Subject_info/Gestation_subjects_weeks.txt",Gestation_subje
 
 
 
-## Plot data thickness data and
+## Plot data thickness data and gestational age
 
 t_skin = np.loadtxt(main_path+"Subject_info/t_skin_cm.txt")
 t_adipose = np.loadtxt(main_path+"Subject_info/t_adipose_cm.txt")
@@ -413,14 +442,14 @@ for j in range(integration_time_s.shape[0]):
 
 
     #calculate SNR
-    for binning in np.array([1,2,5,10]):
+    for binning in np.array([1,10]):
         binned_signal = process_Binning(I_interp,binning)
 
         #Get SNR_y
         SNR_y = binned_signal.mean(axis=1) / binned_signal.std(axis=1)
 
 
-        print("ti ",integration_time_s[j],"binning", binning, "SNR ",SNR_y.mean(), "size signal: ",binned_signal.shape)
+        print("ti ",integration_time_s[j],"binning", binning, "SNR ",SNR_y, "size signal: ",binned_signal.shape)
 
 
 # plt.figure()
@@ -431,6 +460,27 @@ for j in range(integration_time_s.shape[0]):
 #     plt.plot(Mini_CYRIL_wavelength,data['Spectra'].mean(axis=0),label=str(integration_time_s_Mini_CYRIL[j]))
 # plt.legend(loc="best")
 # plt.show()
+
+
+
+plt.close('all')
+plt.plot(Intensity_measured[0][0,0:117],'r')
+plt.plot(Intensity_measured[1][0,0:117],'g')
+plt.plot(Intensity_measured[2][0,0:117],'b')
+plt.show()
+
+
+plt.figure(2)
+plt.subplot(121)
+plt.plot(np.array([Intensity_measured[0][0,:].mean(),
+                   Intensity_measured[1][0,:].mean(),
+                   Intensity_measured[2][0,:].mean()]))
+plt.subplot(122)
+plt.plot(np.array([Intensity_measured[0][0,:].std(),
+                   Intensity_measured[1][0,:].std(),
+                   Intensity_measured[2][0,:].std()]))
+plt.show()
+
 
 ## Load and Plot tissue sensitivity data calculated with RedBird
 
@@ -512,6 +562,445 @@ plt.show()
 all_d = np.asarray(all_d)
 print(wavelength, int(100*all_d.mean()))
 
+
+
+## Influence of Skin in placenta sensitivity and detection proba
+
+wavelength = 780
+
+# Load simulation of phantom measurements
+# Load phantom
+path = main_path + "simulations/Redbird/"
+data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
+# dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
+dr_phantom = np.squeeze(data_phantom['Fluence_at_fiber_detector'])
+
+
+#Load tissue sensitivity
+path_data = main_path+"simulations/Redbird/data_article_subcutaneous/"
+SD_separation_cm = np.array([3, 4, 5])
+
+ft = 18
+ft_label = 10
+ft_text = 10
+plt.rcParams.update({'font.size': ft_label})
+
+skin_thickness_subject_mm = np.array([2, 2, 2, 2])
+adipose_thickness_subject_mm = np.array([2, 4, 5, 7])
+muscle_thickness_subject_mm = np.array([7, 10, 12, 17])
+dist_to_plancenta_subjects_mm = skin_thickness_subject_mm + adipose_thickness_subject_mm + muscle_thickness_subject_mm
+
+thickness_label = np.array([])
+for i in range(skin_thickness_subject_mm.shape[0]):
+    txt = "Placenta depth: "+str(dist_to_plancenta_subjects_mm[i])+" mm\n"+ "Skin: "+str(skin_thickness_subject_mm[i])+" mm\n"+"Adipose Tissue: "+str(adipose_thickness_subject_mm[i])+" mm\n"+"Muscle: "+str(muscle_thickness_subject_mm[i])+" mm"
+    thickness_label = np.append(thickness_label,txt)
+
+cmap = cm.plasma
+
+
+
+binning = 1
+int_time_s = 1
+#Get mup min
+mu_p_min, sigma_p_phantom_detector, Coeff = get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured[np.where(int_time_s == integration_time_s)[0][0]],dr_phantom)
+
+
+
+
+
+#Load Data
+Placenta_sensitivity_redbird = np.zeros((skin_thickness_subject_mm.shape[0], SD_separation_cm.shape[0]))
+
+Skin_sensitivity_redbird = np.zeros(Placenta_sensitivity_redbird.shape)
+Adipose_sensitivity_redbird = np.zeros(Placenta_sensitivity_redbird.shape)
+Muscle_sensitivity_redbird = np.zeros(Placenta_sensitivity_redbird.shape)
+Detection_proba = np.zeros(Placenta_sensitivity_redbird.shape)
+
+for i in range(skin_thickness_subject_mm.shape[0]):
+
+
+
+    data = scipy.io.loadmat(path_data+
+    'out_'+str(wavelength)+'_St_muscle_0.6_St_placenta_0.8' +
+    '_Thick_skin_' +str(skin_thickness_subject_mm[i]) +
+    '_Thick_adipose_' +str(adipose_thickness_subject_mm[i]) +
+    '_Thick_muscle_' + str(muscle_thickness_subject_mm[i]) +
+    'f_mel0.0255' +
+    '_HbT_muscle_umol_35'+
+    '_HbT_placenta_umol_35.mat')
+
+
+    Skin_sensitivity_redbird[i,:] = data['Sensitivity_indexes'][:,0]
+    Adipose_sensitivity_redbird[i,:] = data['Sensitivity_indexes'][:,1]
+
+    Placenta_sensitivity_redbird[i,:] = data['Sensitivity_indexes'][:,3]
+    Muscle_sensitivity_redbird[i,:] = data['Sensitivity_indexes'][:,2]
+
+    # val = np.squeeze(data['Diffuse_reflectance'])/Coeff
+    val = np.squeeze(data['Fluence_at_fiber_detector'])/Coeff
+
+
+    for d in range(SD_separation_cm.shape[0]):
+        Detection_proba[i,d] = get_detection_proba(val[d], sigma_p_phantom_detector[d], mu_p_min[d])
+
+
+
+
+
+skin_thickness_subject_mm = np.array([1, 2, 3])
+adipose_thickness_subject_mm = np.array([5, 5, 5])
+muscle_thickness_subject_mm = np.array([12, 12, 12])
+dist_to_plancenta_subjects_mm2 = skin_thickness_subject_mm + adipose_thickness_subject_mm + muscle_thickness_subject_mm
+
+thickness_label2 = np.array([])
+for i in range(skin_thickness_subject_mm.shape[0]):
+    txt = "Placenta depth: "+str(dist_to_plancenta_subjects_mm2[i])+" mm\n"+ "Skin: "+str(skin_thickness_subject_mm[i])+" mm\n"+"Adipose Tissue: "+str(adipose_thickness_subject_mm[i])+" mm\n"+"Muscle: "+str(muscle_thickness_subject_mm[i])+" mm"
+
+    thickness_label2 = np.append(thickness_label2,txt)
+
+
+
+#Load Data skin thickness influence
+Placenta_sensitivity_redbird2 = np.zeros((skin_thickness_subject_mm.shape[0], SD_separation_cm.shape[0]))
+Muscle_sensitivity_redbird2 = np.zeros(Placenta_sensitivity_redbird2.shape)
+Detection_proba2 = np.zeros(Placenta_sensitivity_redbird2.shape)
+Skin_sensitivity_redbird2 = np.zeros(Placenta_sensitivity_redbird2.shape)
+Adipose_sensitivity_redbird2 = np.zeros(Placenta_sensitivity_redbird2.shape)
+
+for i in range(skin_thickness_subject_mm.shape[0]):
+
+
+
+    data = scipy.io.loadmat(path_data+
+    'out_'+str(wavelength)+'_St_muscle_0.6_St_placenta_0.8' +
+    '_Thick_skin_' +str(skin_thickness_subject_mm[i]) +
+    '_Thick_adipose_' +str(adipose_thickness_subject_mm[i]) +
+    '_Thick_muscle_' + str(muscle_thickness_subject_mm[i]) +
+    'f_mel0.0255' +
+    '_HbT_muscle_umol_35'+
+    '_HbT_placenta_umol_35.mat')
+
+
+    Skin_sensitivity_redbird2[i,:] = data['Sensitivity_indexes'][:,0]
+    Adipose_sensitivity_redbird2[i,:] = data['Sensitivity_indexes'][:,1]
+
+    Placenta_sensitivity_redbird2[i,:] = data['Sensitivity_indexes'][:,3]
+    Muscle_sensitivity_redbird2[i,:] = data['Sensitivity_indexes'][:,2]
+
+    # val = np.squeeze(data['Diffuse_reflectance'])/Coeff
+    val = np.squeeze(data['Fluence_at_fiber_detector'])/Coeff
+
+
+    for d in range(SD_separation_cm.shape[0]):
+        Detection_proba2[i,d] = get_detection_proba(val[d], sigma_p_phantom_detector[d], mu_p_min[d])
+
+
+
+plt.close('all')
+fig1 = plt.figure(tight_layout=True)
+plt.suptitle("Effect of the skin thickness on detection probability",fontsize=ft)
+
+
+
+#Plot 1
+y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(1,2,1)
+ax1.set_title("A - Detection probability at "+str(wavelength)+" nm for a fixed skin thickness",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Detection_proba*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Detection_proba[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Detection_proba[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Detection probability (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+#Plot 2
+y = np.arange(dist_to_plancenta_subjects_mm2.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(1,2,2)
+ax1.set_title("A - Detection probability at "+str(wavelength)+" nm for varying skin thickness",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Detection_proba2*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Detection_proba2[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Detection_proba2[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Detection probability (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label2)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fig1 = plt.figure(tight_layout=True)
+plt.suptitle("Effect of the skin thickness on tissue sensitivity",fontsize=ft)
+
+
+#Skin
+#Plot 1
+y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,1)
+ax1.set_title("A - Skin sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Skin_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Skin_sensitivity_redbird[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Skin_sensitivity_redbird[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Skin sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+#Plot 2
+y = np.arange(Placenta_sensitivity_redbird2.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,2)
+ax1.set_title("B - Skin sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Skin_sensitivity_redbird2*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Skin_sensitivity_redbird2[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Skin_sensitivity_redbird2[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Skin sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label2)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+
+
+
+
+
+#Adipose
+#Plot 1
+y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,3)
+ax1.set_title("C - Adipose sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Adipose_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Adipose_sensitivity_redbird[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Adipose_sensitivity_redbird[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Adipose tissue sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+#Plot 2
+y = np.arange(Placenta_sensitivity_redbird2.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,4)
+ax1.set_title("D - Adipose sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Adipose_sensitivity_redbird2*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Adipose_sensitivity_redbird2[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Adipose_sensitivity_redbird2[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Adispose tissue sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label2)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+
+
+
+
+
+
+
+#Muscle
+#Plot 1
+y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,5)
+ax1.set_title("E - Muscle sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Muscle_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Muscle_sensitivity_redbird[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Muscle_sensitivity_redbird[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Muscle sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+#Plot 2
+y = np.arange(Placenta_sensitivity_redbird2.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,6)
+ax1.set_title("F - Muscle sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Muscle_sensitivity_redbird2*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Muscle_sensitivity_redbird2[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Muscle_sensitivity_redbird2[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Muscle sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label2)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+
+
+
+
+
+
+
+
+
+
+#Placenta
+#Plot 1
+y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,7)
+ax1.set_title("G - Placenta sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Placenta_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Placenta_sensitivity_redbird[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Placenta_sensitivity_redbird[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+#Plot 2
+y = np.arange(Placenta_sensitivity_redbird2.shape[0])
+x = SD_separation_cm.copy()
+T_x,T_y = np.meshgrid(x,y)
+ax1 = fig1.add_subplot(2,4,8)
+ax1.set_title("H - Placenta sensitivity",fontsize=ft)
+im = ax1.pcolor(T_x,T_y,Placenta_sensitivity_redbird2*100, cmap=cmap, vmin=0, vmax=100)
+
+for x_id,xval in enumerate(x):
+    for y_id,yval in enumerate(y):
+        if Placenta_sensitivity_redbird2[y_id,x_id]*100<40:
+            colors = 'w'
+        else:
+            colors = 'k'
+        ax1.text(xval-0.25,yval,str(int(10000*Placenta_sensitivity_redbird2[y_id,x_id])/100),color=colors,fontsize=ft_text)
+
+cb = fig1.colorbar(im, ax=ax1)
+cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
+ax1.set_xticks(x)  # Set x ticks to vector values
+ax1.set_yticks(y)  # Set y ticks to vector values
+ax1.set_yticklabels(thickness_label2)
+ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+# ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+plt.show()
+
 ## Calculate the detection probability
 
 
@@ -520,11 +1009,13 @@ wavelength = 780
 # Load phantom
 path = main_path + "simulations/Redbird/"
 data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
-dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
+# dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
+dr_phantom = np.squeeze(data_phantom['Fluence_at_fiber_detector'])
 
 
-ft = 23
-ft_label = 23
+
+ft = 18
+ft_label = 18
 
 plt.rcParams.update({'font.size': ft})
 
@@ -580,17 +1071,13 @@ for id_mel in range(f_melanosome.shape[0]):
             '_HbT_placenta_umol_'+str(v_p) +'.mat')
 
 
-            val = np.squeeze(data['Diffuse_reflectance'])/Coeff
+            # val = np.squeeze(data['Diffuse_reflectance'])/Coeff
+            val = np.squeeze(data['Fluence_at_fiber_detector'])/Coeff
+
 
             for d in range(SD_separation_cm.shape[0]):
-                # Detection probability
-                sample = np.random.normal(loc = val[d],
-                                            scale = sigma_p_phantom_detector[d],
-                                            size = (100))
-                # Process T-tests
-                t,p = scipy.stats.ttest_1samp(sample,mu_p_min[d],
-                                            alternative='greater')
-                Detection_probability[j,d] = 1-p #Proba to accept alternative hypothesis
+                Detection_probability[j,d] = get_detection_proba(val[d], sigma_p_phantom_detector[d], mu_p_min[d])
+
 
 
         y = HbT_placenta_array
@@ -667,16 +1154,10 @@ for d in range(SD_separation_cm.shape[0]):
 
             for s in range(Diffuse_reflectance.shape[1]):
                 val = Diffuse_reflectance[d,s]/Coeff[d]
+                Detection_probability[s] = get_detection_proba(val, sigma_p_phantom_detector[d], mu_p_min[d])
+                Scanning_probability[s] = Detection_probability[s]* S_placenta[d,s]
 
-                # Detection probability
-                sample = np.random.normal(loc = val,
-                                            scale = sigma_p_phantom_detector[d],
-                                            size = (100))
-                # Process T-tests
-                t,p = scipy.stats.ttest_1samp(sample,mu_p_min[d],
-                                            alternative='greater')
-                Detection_probability[s] = 1-p #Proba to accept alternative hypothesis
-                Scanning_probability[s] = (1-p)* S_placenta[d,s]
+
 
 
             # S_placenta_m.append(S_placenta[:,id_SatO2_muscle,id_SatO2_placenta,id_HbT_muscle,id_HbT_placenta, d])
@@ -997,8 +1478,325 @@ plt.show()
 
 
 
+## Calculate and plot SRS
+
+# Load phantom
+path = main_path + "simulations/Redbird/"
+data_phantom = scipy.io.loadmat(path+'Phantom_Data_780.mat')
+dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
+
+
+#Set integration time and binning
+int_time_s = 10
+binning = 10
+
+
+
+#Get mup min
+mu_p_min, sigma_p_phantom_detector, Coeff = get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured[np.where(int_time_s == integration_time_s)[0][0]],dr_phantom)
+
+
+#Extinction coeff shape (wavelengths,nb_chrom)
+# chromophores are Hb, HbO2
+extinction_coefficients = np.array([ [0.000110593822843823, 7.54002331002331e-05],
+                                        [7.98426573426574e-05, 9.14371212121212e-05],
+                                        [7.77872960372961e-05, 0.000100791258741259],
+                                        [7.77082750582751e-05, 0.000105600582750583],
+                                        [7.81447552447553e-05, 0.000109727972027972],
+                                        [8.63153846153846e-05, 0.000122350815850816]])
+
+# Get MBLL Matrix
+ext_coeffs_inv = np.linalg.pinv(extinction_coefficients)
+
+#Wavelengths
+WAVELENGTHS = np.array([780, 810, 830, 840, 850, 890])
+
+#Source detector separation
+SD_separations_in_mm = np.array([30,40,50])
+id_comb_34 = np.array([0,1]) #3, 4 cm
+id_comb_45 = np.array([1,2]) #4, 5 cm
+
+#SatO2
+SatO2_muscle = np.array([0.4, 0.4, 0.5, 0.7, 0.8, 0.8])
+SatO2_placenta = np.array([0.4, 0.8, 0.7, 0.5, 0.4, 0.8])
+
+
+
+
+#fmelanosome
+f_melanosome = np.array([2.55,15.5,30.5])/100
+
+#Subject tissue thickness
+skin_thickness_subject_mm = np.array([1, 2, 3])
+adipose_thickness_subject_mm = np.array([2, 4, 5])
+muscle_thickness_subject_mm = np.array([7, 10, 12])
+dist_to_plancenta_subjects_mm = skin_thickness_subject_mm + adipose_thickness_subject_mm + muscle_thickness_subject_mm
+
+#Init output
+SatO2_array = np.zeros((3,SatO2_muscle.shape[0],f_melanosome.shape[0]))
+detection_proba = np.zeros(SatO2_array.shape)
+
+
+for id_subject in range(1,4):
+    for S in range(SatO2_muscle.shape[0]):
+        for f_mel in range(f_melanosome.shape[0]):
+            #Load mat file
+            data = scipy.io.loadmat(main_path + "simulations/Redbird/StO2_LUT/out_subject_" +
+                                    str(id_subject)+"St_muscle_"+str(SatO2_muscle[S]) +
+                                    "_St_placenta_"+str(SatO2_placenta[S])+ "_fmel_" +
+                                    str(f_melanosome[f_mel])+".mat")
+
+            #Load intensity
+            I = np.squeeze(data['Diffuse_reflectance'])
+
+            #Select detector comb
+            I = I[id_comb_34,:]
+
+            #Calculate detection proba at 780 nm for detector at 3 cm
+            det1 = get_detection_proba(I[id_comb_34[0],0]/Coeff[id_comb_34[0]], sigma_p_phantom_detector[id_comb_34[0]], mu_p_min[id_comb_34[0]])
+            det2 = get_detection_proba(I[id_comb_34[1],0]/Coeff[id_comb_34[1]], sigma_p_phantom_detector[id_comb_34[1]], mu_p_min[id_comb_34[1]])
+
+            if det1<0.99 or det2<0.99:
+                detection_proba[id_subject-1, S, f_mel] = 0
+            else:
+                detection_proba[id_subject-1, S, f_mel] = 1
+
+            #Compute Attenuation
+            Attenuation = np.log10(1/I)
+
+            #Process SRS
+            _StO2 = SRS(Attenuation[id_comb_34,:],
+                        SD_separations_in_mm[id_comb_34],WAVELENGTHS,ext_coeffs_inv)
+
+            SatO2_array[id_subject-1, S, f_mel] = _StO2
+
+
+
+
+#Set to nan if detection proba is below 99%
+SatO2_array[detection_proba<0.99] = np.nan
+
+
+
+#SatO2 homogeneous tissue
+SatO2_homo = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+SatO2_array_homo = np.zeros((2,SatO2_homo.shape[0]))
+detection_proba_homo = np.zeros(SatO2_array_homo.shape)
+id_comb_34_homo = np.array([0,2])
+id_comb_45_homo = np.array([2,4])
+
+
+for S in range(SatO2_homo.shape[0]):
+    #Load mat file
+    data = scipy.io.loadmat(main_path + "simulations/Redbird/StO2_semi_ininite/St_" +str(SatO2_homo[S])+".mat")
+
+    #Load intensity
+    I = np.squeeze(data['Diffuse_reflectance'])
+
+    #Compute Attenuation
+    Attenuation = np.log10(1/I)
+
+
+    #Calculate detection proba at 780 nm for detector at 3 cm
+    detection_proba_homo[0,S] = get_detection_proba(I[id_comb_34_homo[0],0]/Coeff[id_comb_34_homo[0]], sigma_p_phantom_detector[id_comb_34_homo[0]], mu_p_min[id_comb_34_homo[0]])
+    detection_proba_homo[1,S] = get_detection_proba(I[id_comb_34_homo[1],0]/Coeff[id_comb_34_homo[1]], sigma_p_phantom_detector[id_comb_34_homo[1]], mu_p_min[id_comb_34_homo[1]])
+
+    #Process SRS
+    _StO2_SD_34 = SRS(Attenuation[id_comb_34_homo,:], np.array([30,40]),
+                        WAVELENGTHS,ext_coeffs_inv)
+    _StO2_SD_45 = SRS(Attenuation[id_comb_45_homo,:], np.array([40,50]),
+                        WAVELENGTHS,ext_coeffs_inv)
+
+    SatO2_array_homo[0,S] = _StO2_SD_34
+    SatO2_array_homo[1,S] = _StO2_SD_45
+
+
+
+#Set to nan if detection proba is below 95%
+SatO2_array_homo[detection_proba_homo<0.99] = np.nan
+
+
+# plot
+ft = 20
+ft_label = ft
+plt.rcParams.update({'font.size': ft})
+
+val_thresh = 50
+
+
+SatO2_homo_display = SatO2_array_homo[0,:]
+SatO2_homo_display = SatO2_homo_display.reshape(SatO2_homo_display.shape[0], 1)
+
+SatO2_array_display = SatO2_array.copy()
+
+plt.close('all')
+fig1, axes = plt.subplots(4, 1, constrained_layout=True)
+SD = (SD_separations_in_mm[id_comb_34]/10).astype(int)
+
+SD_sep = "(SD separation: "+str(SD[0])+"-"+str(SD[1])+" cm)"
+
+
+# ----- Display SatO2 for semi-infinite slab -----
+axes[0].set_title("$PltO_2$ estimation for a semi-infinite slab "+SD_sep, fontsize=ft)
+
+# Fix shape for pcolor
+x = np.arange(SatO2_homo_display.shape[1] + 1)  # Columns +1
+y = np.arange(SatO2_homo_display.shape[0] + 1)  # Rows +1
+
+im = axes[0].pcolor(y, x, SatO2_homo_display.T, vmin=0, vmax=100, cmap=cmap)
+
+# Custom x labels
+x_positions = np.arange(SatO2_homo_display.shape[0]) + 0.5
+x_labels = []
+for s in SatO2_homo:
+    x_labels.append(str(int(s*100))+"%")
+
+axes[0].set_yticks([])  # Remove y-ticks
+axes[0].set_xticks(x_positions)  # Set positions for labels
+axes[0].set_xticklabels(x_labels, fontsize=ft)
+# axes[0].set_xlabel("$SatO_2$ value in the semi-infinite slab (%)", fontsize=ft)
+
+# Add text annotations
+for x_id, xval in enumerate(x_positions):
+    val = SatO2_homo_display[x_id, 0]
+    if not np.isnan(val):
+        if val<val_thresh:
+            col = 'w'
+        else:
+            col = 'k'
+        axes[0].text(xval-0.05, 0.5, str(int(val)), color=col, fontsize=ft)
+
+
+
+
+#xlabel
+x_labels = np.array([])
+for S in range(SatO2_muscle.shape[0]):
+    x_labels = np.append(x_labels, "Muscle: "+str(int(SatO2_muscle[S]*100))+"%"+"\n"+
+                                    "Placenta: "+str(int(SatO2_placenta[S]*100))+"%")
+
+#ylabel
+y_labels = np.array([])
+for S in range(f_melanosome.shape[0]):
+    y_labels = np.append(y_labels, str((f_melanosome[S]*100))+"%")
+
+
+for subject_id in range(SatO2_array_display.shape[0]):
+    ax = axes[subject_id + 1]  # Access subplot
+
+    # Define meshgrid correctly
+    x = np.arange(x_labels.shape[0] + 1)
+    y = np.arange(y_labels.shape[0] + 1)
+    T_x, T_y = np.meshgrid(x, y)
+
+    im = ax.pcolor(T_x, T_y, SatO2_array_display[subject_id, :, :].T, vmin=0, vmax=100, cmap=cmap)
+
+    ax.set_xticks(np.arange(len(x_labels)) + 0.5)
+    ax.set_xticklabels(x_labels, fontsize=ft)
+
+    ax.set_yticks(np.arange(len(y_labels)) + 0.5)
+    ax.set_yticklabels(y_labels, fontsize=ft)
+
+    ax.set_title("$PltO_2$ estimation for a placenta depth of "+str(dist_to_plancenta_subjects_mm[subject_id]) +" mm "+SD_sep, fontsize=ft)
+
+    # Add text annotations
+    for x_id in range(len(x_labels)):
+        for y_id in range(len(y_labels)):
+            val = SatO2_array_display[subject_id, x_id, y_id]
+            if not np.isnan(val):
+                if val<val_thresh:
+                    col = 'w'
+                else:
+                    col = 'k'
+                ax.text(x_id + 0.5, y_id +0.4, str(int(val)), color=col, fontsize=ft)
+
+# Add shared labels
+fig1.supylabel("Melanosome volume fraction (%)", fontsize=ft)
+fig1.supxlabel("Placental tissue oxygenation (%)", fontsize=ft)
+
+# Fix colorbar expansion issue
+cbar = fig1.colorbar(im, ax=axes, orientation='vertical', fraction=0.02, pad=0.04, aspect=30)
+cbar.set_label("$PltO_2$ (%)", fontsize=ft)
+
+plt.show()
+
+
+
+
+
+
+
+ms = 15
+
+# Plot PltO2 for semi infinite slab
+
+plt.figure()
+plt.title("Placental tissue oxygenation estimation in semi-infinite slab with SRS algorithm",fontsize=ft)
+plt.plot(SatO2_homo*100,SatO2_homo*100,"k",label="Ground truth")
+
+plt.plot(SatO2_homo*100,SatO2_array_homo[0,:],"ko",label="Source-detector separation 3-4 cm",markersize=ms)
+plt.plot(SatO2_homo*100,SatO2_array_homo[1,:],"r*",label="Source-detector separation 4-5 cm",markersize=ms)
+plt.xlabel("Expected $PltO_2$ (%)",fontsize=ft)
+plt.ylabel("Estimated $PltO_2$ (%)",fontsize=ft)
+# plt.xlim(0,100)
+# plt.ylim(0,100)
+
+plt.legend(loc="best",fontsize=ft)
+plt.grid()
+
+plt.show()
+
+
+
+
+#Errors
+e_homo = (SatO2_array_homo[0,:] - SatO2_homo*100)
+
+
 ##
 
-a = np.random.random(50)
-b = np.array([np.sum(a[0:10]),np.sum(a[10:20]),np.sum(a[20:30]),np.sum(a[30:40]),np.sum(a[40:50])])
+SD_separations_in_mm = np.array([30,35,40,45,50])
+SD_separations_in_cm = np.array(["3", "3.5","4", "4.5", "5"])
 
+id_comb = np.array([[0,1],[3,4],[0,2],[2,4]])
+colors = np.array(["ko","ro","go","mo"])
+
+#SatO2 homogeneous tissue
+SatO2_homo = np.array([0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+SatO2_array_homo = np.zeros((id_comb.shape[0],SatO2_homo.shape[0]))
+
+
+for S in range(SatO2_homo.shape[0]):
+    #Load mat file
+    data = scipy.io.loadmat(main_path + "simulations/Redbird/StO2_semi_ininite/St_" +str(SatO2_homo[S])+".mat")
+
+    #Load intensity
+    I = np.squeeze(data['Diffuse_reflectance'])
+
+    #Compute Attenuation
+    Attenuation = np.log10(1/I)
+
+
+    #Process SRS
+    for id in range(id_comb.shape[0]):
+        _StO2 = SRS(Attenuation[id_comb[id,:],:], SD_separations_in_mm[id_comb[id,:]],
+                        WAVELENGTHS,ext_coeffs_inv)
+        SatO2_array_homo[id,S] = _StO2
+
+
+plt.figure()
+plt.title("Placental tissue oxygenation estimation in semi-infinite slab with SRS algorithm",fontsize=ft)
+plt.plot(SatO2_homo*100,SatO2_homo*100,"k",label="Ground truth")
+
+for id in range(id_comb.shape[0]):
+    plt.plot(SatO2_homo*100,SatO2_array_homo[id,:],colors[id],label="Source-detector separation "+SD_separations_in_cm[id_comb[id,0]]+"-"+SD_separations_in_cm[id_comb[id,1]]+" cm",markersize=ms)
+
+plt.xlabel("Expected $PltO_2$ (%)",fontsize=ft)
+plt.ylabel("Estimated $PltO_2$ (%)",fontsize=ft)
+# plt.xlim(0,100)
+# plt.ylim(0,100)
+
+plt.legend(loc="best",fontsize=ft)
+plt.grid()
+
+plt.show()

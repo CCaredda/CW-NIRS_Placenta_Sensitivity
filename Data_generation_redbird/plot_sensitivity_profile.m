@@ -3,6 +3,8 @@ clear
 close all
 clc
 
+clear cfg;
+
 addpath('~/Soft/redbird/matlab');
 addpath('~/Soft/iso2mesh');
 addpath('../functions');
@@ -26,10 +28,13 @@ thickness_layers_mm = [2 4 10];
 %Source detector separation in mm
 detectors_SD_mm = [30 40 50];
 
-clear cfg;
 
 %Create 4 layers volume
 cfg = create_meshed_volume_4layers(xdim_mm, ydim_mm, zdim_mm, thickness_layers_mm, max_vol_mesh, detectors_SD_mm, display);
+
+%Model fiber detector
+cfg.radius_fiber_det_mm = 2.3;
+cfg.reso_detector_mm = 0.1;
 
 C_HbT_muscle = 25*1e-6;
 C_HbT_placenta = 25*1e-6;
@@ -45,31 +50,34 @@ optical_prop = process_optical_properties_skin_Fat_muscle_placenta(Lambdas,f_mel
 
 
 %Calculate sensisitivity profile
-[sensitivity_profile, Diffuse_reflectance] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Diffuse_reflectance, Fluence_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
 
 %Calculate sensiticity indexes
 % S_index = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
 
 
-%Init output
-Sensitivity_proba = zeros(xdim_mm,ydim_mm,zdim_mm,size(sensitivity_profile,2));
+% %Init output
+% Sensitivity_proba = zeros(xdim_mm,ydim_mm,zdim_mm,size(sensitivity_profile,2));
+% 
+% %interpolate volume
+% for d=1:size(sensitivity_profile,2)
+%     [xi, yi, zi] = meshgrid(0.5:xdim_mm-0.5, 0.5:ydim_mm-0.5, 0.5:zdim_mm-0.5);
+%     Sensitivity_proba(:,:,:,d) = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), sensitivity_profile(:,d), xi, yi, zi);
+% 
+% end
 
-%interpolate volume
-for d=1:size(sensitivity_profile,2)
-    [xi, yi, zi] = meshgrid(0.5:xdim_mm-0.5, 0.5:ydim_mm-0.5, 0.5:zdim_mm-0.5);
-    Sensitivity_proba(:,:,:,d) = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), sensitivity_profile(:,d), xi, yi, zi);
-
-end
 close all
 figure(1)
 subplot(131)
-imagesc(log10(Sensitivity_proba(:,:,1,1)))
+imagesc(log10(sensitivity_profile(:,:,1,1)))
 subplot(132)
-imagesc(log10(squeeze(Sensitivity_proba(:,100,:,1))))
+imagesc(log10(squeeze(sensitivity_profile(:,100,:,1))))
 subplot(133)
-imagesc(log10(squeeze(Sensitivity_proba(100,:,:,1))))
+imagesc(log10(squeeze(sensitivity_profile(100,:,:,1))))
 
 srcpos = cfg.srcpos;
 detpos = cfg.detpos;
 
-save(strcat("Sensitivity_proba_fmel_",num2str(f_mel),".mat"),'Sensitivity_proba', 'srcpos', 'detpos', 'thickness_layers_mm');
+save(strcat("Sensitivity_proba_fmel_",num2str(f_mel),".mat"),'sensitivity_profile', 'srcpos', 'detpos', 'thickness_layers_mm');
+
+

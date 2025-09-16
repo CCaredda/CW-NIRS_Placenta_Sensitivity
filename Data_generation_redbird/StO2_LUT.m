@@ -3,7 +3,7 @@ clear
 close all
 clc
 
-cluster = 1;
+cluster = 0;
 
 % Add path
 if cluster ==1
@@ -63,6 +63,9 @@ thickness_layers_mm = thickness_layers_mm_array(subject,:);
 %Create 4 layers volume
 cfg = create_meshed_volume_4layers(xdim_mm, ydim_mm, zdim_mm, thickness_layers_mm, max_vol_mesh, detectors_SD_mm, display);
 
+%Model fiber detector
+cfg.radius_fiber_det_mm = 2.3;
+cfg.reso_detector_mm = 0.1;
 
 %Calculate optical properties for each layers
 for p=1:length(SatO2_muscle_array)
@@ -75,6 +78,7 @@ for p=1:length(SatO2_muscle_array)
 
         %Output
         Diffuse_reflectance = zeros(length(detectors_SD_mm), length(Lambda_array));
+        Fluence_at_fiber_detector = zeros(length(detectors_SD_mm), length(Lambda_array));
 
 
         for i_Lambdas = 1:length(Lambda_array)
@@ -86,12 +90,14 @@ for p=1:length(SatO2_muscle_array)
             fprintf(1,strcat('Calculating sensitivity index\n'));
         
             %Calculate sensisitivity profile
-            [sensitivity_profile, DR] = get_sensitivity_profiles(cfg, optical_prop);
+            [sensitivity_profile, DR, F_det] = get_sensitivity_profiles(cfg, optical_prop);
             Diffuse_reflectance(:,i_Lambdas) = DR;
+            Fluence_at_fiber_detector(:,i_Lambdas) = F_det;
   
-            output_name = strcat(outdir,'/out_subject_',num2str(subject),'St_muscle_',num2str(SatO2_muscle),'_St_placenta_',num2str(SatO2_placenta),'_fmel_',num2str(f_mel),'.mat');
-            save(output_name,'Diffuse_reflectance');
+            
         end
+        output_name = strcat(outdir,'/out_subject_',num2str(subject),'St_muscle_',num2str(SatO2_muscle),'_St_placenta_',num2str(SatO2_placenta),'_fmel_',num2str(f_mel),'.mat');
+        save(output_name,'Diffuse_reflectance','Fluence_at_fiber_detector');
         
                             
     end

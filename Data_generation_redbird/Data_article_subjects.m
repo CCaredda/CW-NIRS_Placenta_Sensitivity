@@ -2,7 +2,7 @@ clear
 close all
 clc
 
-cluster = 1;
+cluster = 0;
 
 % Add path
 if cluster ==1
@@ -26,7 +26,8 @@ xdim_mm = 200;
 ydim_mm = 200;
 zdim_mm = 200;
 % max_vol_mesh = [0.1; 0.1; 1; 1000];
-max_vol_mesh = [0.5; 0.5; 1; 10000];
+% max_vol_mesh = [0.5; 0.5; 1; 10000];
+max_vol_mesh = [1; 1; 1; 10000];
 
 %Load subject info
 thickness_skin_mm = ceil(readmatrix("../Subject_info/t_skin_cm.txt")*10);
@@ -42,6 +43,7 @@ detectors_SD_mm = [30 40 50];
 %Output
 Sensitivity_indexes = zeros(length(detectors_SD_mm), 4, length(thickness_skin_mm));
 Diffuse_reflectance = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
+Fluence_at_fiber_detector = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
 
 
 
@@ -55,6 +57,9 @@ for subject=1:length(thickness_skin_mm)
     %Create 4 layers volume
     cfg = create_meshed_volume_4layers(xdim_mm, ydim_mm, zdim_mm, thickness_layers_mm, max_vol_mesh, detectors_SD_mm, display);
 
+    %Model fiber detector
+    cfg.radius_fiber_det_mm = 2.3;
+    cfg.reso_detector_mm = 0.1;
    
     %Calculate optical properties for each layers
     C_HbT_muscle = 35*1e-6;
@@ -74,7 +79,8 @@ for subject=1:length(thickness_skin_mm)
     %Get Sensitivity indexes for the 4 layers
     fprintf(1,strcat('Calculating sensitivity index\n'));
     %Calculate sensisitivity profile
-    [sensitivity_profile, DR] = get_sensitivity_profiles(cfg, optical_prop);
+    [sensitivity_profile, DR, F_det] = get_sensitivity_profiles(cfg, optical_prop);
+    
     
     %Calculate sensiticity indexes
     S = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
@@ -82,6 +88,7 @@ for subject=1:length(thickness_skin_mm)
     
     Sensitivity_indexes(:,:,subject) = S;
     Diffuse_reflectance(:,subject) = DR;
+    Fluence_at_fiber_detector(:,subject) = F_det;
     
 
     
@@ -89,6 +96,6 @@ for subject=1:length(thickness_skin_mm)
 end
 
 
-save(strcat('Data_subjects_',num2str(Lambdas),'.mat'),'Diffuse_reflectance','Sensitivity_indexes');
+save(strcat('Data_subjects_',num2str(Lambdas),'.mat'),'Diffuse_reflectance','Sensitivity_indexes', 'Fluence_at_fiber_detector');
 
 

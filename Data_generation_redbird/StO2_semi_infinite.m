@@ -3,7 +3,7 @@ clear
 close all
 clc
 
-cluster = 1;
+cluster = 0;
 
 % Add path
 if cluster ==1
@@ -23,12 +23,12 @@ display = 0;
 Lambda_array = [780, 810, 830, 840, 850, 890];
 
 %Volume ize in mm
-xdim_mm = 200;
-ydim_mm = 200;
-zdim_mm = 200;
+xdim_mm = 80;
+ydim_mm = 80;
+zdim_mm = 80;
 
 %Source detector separation in mm
-detectors_SD_mm = [30 40 50];
+detectors_SD_mm = [30 35 40 45 50];
 
 %Saturation array
 SatO2_array = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
@@ -62,6 +62,11 @@ end
 cfg.detpos = det_pos;
 
 
+%Model fiber detector
+cfg.radius_fiber_det_mm = 2.3;
+cfg.reso_detector_mm = 0.1;
+
+
 %Calculate optical properties for each layers
 for p=1:length(SatO2_array)
     
@@ -69,6 +74,7 @@ for p=1:length(SatO2_array)
     
     %Output
     Diffuse_reflectance = zeros(length(detectors_SD_mm), length(Lambda_array));
+    Fluence_at_fiber_detector = zeros(length(detectors_SD_mm), length(Lambda_array)); 
 
 
     for i_Lambdas = 1:length(Lambda_array)
@@ -89,13 +95,55 @@ for p=1:length(SatO2_array)
         Diffuse_reflectance(:,i_Lambdas) = DR;
 
 
-        %Process srs
-        h = 6.3e-4;
-srs_mua_30_50_c1(lambda) = 1 / (3 * (1 - (h * lambda_all(lambda)))) *  (log(10) * (srs_ss_30_50_c1(lambda))-(2/mean([30 50]))).^2;
-srs_mua_30_50_c2(lambda) = 1 / (3 * (1 - (h * lambda_all(lambda)))) *  (log(10) * (srs_ss_30_50_c2(lambda))-(2/mean([30 50]))).^2;
+        %Get fluence at detector pos
+        %Init output
+        [xi, yi, zi] = meshgrid(0.5:cfg.xdim_mm-0.5, 0.5:cfg.ydim_mm-0.5, 0.5:cfg.zdim_mm-0.5);
+        Sensitivity_profile = zeros(length(xi), length(yi), length(zi), length(cfg.detectors_SD_mm));
+    
+    
+        %Fluence at Fiber detector
+        Phi_volume = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), phi(:,1), xi, yi, zi);
+    
+        %info interpolated image
+        dim_interp_img = (2*ceil(cfg.radius_fiber_det_mm)+1)/cfg.reso_detector_mm;
+    
+            
+    
+        %Calculate sensitivity profile per detector
+        for i=1:length(cfg.detectors_SD_mm)
+    
+            
+            %Get fluence at fiber detector position
+    
+            %Detector is at position [ceil(radius_fiber_det_mm)+1 , ceil(radius_fiber_det_mm)+1]
+            Phi_around_det = Phi_volume(cfg.detpos(i,2)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,2)+1 + ceil(cfg.radius_fiber_det_mm) , ...
+                                         cfg.detpos(i,1)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,1)+1 + ceil(cfg.radius_fiber_det_mm));
+            
+            %Interpolate image around detector to match reso_detector_mm
+            Rin  = imref2d(size(Phi_around_det), [0 2*ceil(cfg.radius_fiber_det_mm)], [0 2*ceil(cfg.radius_fiber_det_mm)]); 
+            Rout = imref2d([dim_interp_img dim_interp_img],   [0 2*ceil(cfg.radius_fiber_det_mm)], [0 2*ceil(cfg.radius_fiber_det_mm)]);
+            
+            tform = affine2d(eye(3)); % identity (no geometric change, only resampling)
+            J = imwarp(Phi_around_det, Rin, tform, ...
+                       'OutputView', Rout, ...
+                       'InterpolationMethod', 'cubic');
+            
+            % pixel center
+            cx = (dim_interp_img+1)/2;  
+            cy = (dim_interp_img+1)/2;
+        
+            %Mask on detector fiber position
+            radius_fiber_det_px = cfg.radius_fiber_det_mm / Rout.PixelExtentInWorldX;
+            [x, y] = meshgrid(1:dim_interp_img, 1:dim_interp_img);
+            mask = (x - cx).^2 + (y - cy).^2 <= radius_fiber_det_px^2;
+                
+        
+            Fluence_at_fiber_detector(i,i_Lambdas) = sum(J(mask));
+    
+        end
 
-
-        output_name = strcat(outdir,'/St_',num2str(SatO2_array(p)),'.mat');
-        save(output_name,'Diffuse_reflectance');
+     
     end
+    output_name = strcat(outdir,'/St_',num2str(SatO2_array(p)),'.mat');
+    save(output_name,'Diffuse_reflectance','Fluence_at_fiber_detector');
 end

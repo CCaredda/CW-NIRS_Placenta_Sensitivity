@@ -1,4 +1,4 @@
-function [Sensitivity_profile, Diffuse_reflectance] = get_sensitivity_profiles(cfg, optical_prop)
+function [Sensitivity_profile, Diffuse_reflectance, Fluence_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop)
     cfg.prop=[0 0 1 1; ...
     optical_prop.mua_skin optical_prop.mu_s_skin optical_prop.g_skin optical_prop.n_skin ; ...
     optical_prop.mua_adipose optical_prop.mu_s_adipose optical_prop.g_adipose optical_prop.n_adipose ; ...
@@ -16,13 +16,64 @@ function [Sensitivity_profile, Diffuse_reflectance] = get_sensitivity_profiles(c
     %Set negative values to 0
     phi = abs(phi);
 
-    %Calculate sensitivity profile per detector, size(nodes,detectors)
-    Sensitivity_profile = zeros(size(phi,1),length(cfg.detectors_SD_mm));
+
+    %Init output
+    [xi, yi, zi] = meshgrid(0.5:cfg.xdim_mm-0.5, 0.5:cfg.ydim_mm-0.5, 0.5:cfg.zdim_mm-0.5);
+    Sensitivity_profile = zeros(length(xi), length(yi), length(zi), length(cfg.detectors_SD_mm));
+
+
+    %Fluence at Fiber detector
+    Fluence_fiber_detector = [];
+    Phi_volume = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), phi(:,1), xi, yi, zi);
+
+    %info interpolated image
+    dim_interp_img = (2*ceil(cfg.radius_fiber_det_mm)+1)/cfg.reso_detector_mm;
+
+        
+
+    %Calculate sensitivity profile per detector
     for i=1:length(cfg.detectors_SD_mm)
+
         %Sensitivity profile (adjoint method)
-        Sensitivity_profile(:,i) = phi(:,1).*phi(:,i+1);
+        sensi_profile = phi(:,1).*phi(:,i+1);
+
+        %interpolate volume to sensitivity profile of shape (xdim, ydim, zdim)
+        Sensitivity_profile(:,:,:,i) = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3),sensi_profile, xi, yi, zi);
+
     
         %Normalize by the sum to get the density probability
-        Sensitivity_profile(:,i) = Sensitivity_profile(:,i)/sum(Sensitivity_profile(:,i),"all");
+        Sensitivity_profile(:,:,:,i) = Sensitivity_profile(:,:,:,i)/sum(Sensitivity_profile(:,:,:,i),"all");
+
+
+        
+        %Get fluence at fiber detector position
+        
+        
+        %Select image around detector
+        %Detector is at position [ceil(radius_fiber_det_mm)+1 , ceil(radius_fiber_det_mm)+1]
+        Phi_around_det = Phi_volume(cfg.detpos(i,2)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,2)+1 + ceil(cfg.radius_fiber_det_mm) , ...
+                                     cfg.detpos(i,1)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,1)+1 + ceil(cfg.radius_fiber_det_mm));
+        
+        %Interpolate image around detector to match reso_detector_mm
+        Rin  = imref2d(size(Phi_around_det), [0 2*ceil(cfg.radius_fiber_det_mm)], [0 2*ceil(cfg.radius_fiber_det_mm)]); 
+        Rout = imref2d([dim_interp_img dim_interp_img],   [0 2*ceil(cfg.radius_fiber_det_mm)], [0 2*ceil(cfg.radius_fiber_det_mm)]);
+        
+        tform = affine2d(eye(3)); % identity (no geometric change, only resampling)
+        J = imwarp(Phi_around_det, Rin, tform, ...
+                   'OutputView', Rout, ...
+                   'InterpolationMethod', 'cubic');
+        
+        % pixel center
+        cx = (dim_interp_img+1)/2;  
+        cy = (dim_interp_img+1)/2;
+    
+        %Mask on detector fiber position
+        radius_fiber_det_px = cfg.radius_fiber_det_mm / Rout.PixelExtentInWorldX;
+        [x, y] = meshgrid(1:dim_interp_img, 1:dim_interp_img);
+        mask = (x - cx).^2 + (y - cy).^2 <= radius_fiber_det_px^2;
+            
+    
+        Fluence_fiber_detector(end+1) = sum(J(mask));
+
     end
 end
