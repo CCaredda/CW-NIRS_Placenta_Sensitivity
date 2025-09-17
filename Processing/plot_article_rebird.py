@@ -463,23 +463,7 @@ for j in range(integration_time_s.shape[0]):
 
 
 
-plt.close('all')
-plt.plot(Intensity_measured[0][0,0:117],'r')
-plt.plot(Intensity_measured[1][0,0:117],'g')
-plt.plot(Intensity_measured[2][0,0:117],'b')
-plt.show()
 
-
-plt.figure(2)
-plt.subplot(121)
-plt.plot(np.array([Intensity_measured[0][0,:].mean(),
-                   Intensity_measured[1][0,:].mean(),
-                   Intensity_measured[2][0,:].mean()]))
-plt.subplot(122)
-plt.plot(np.array([Intensity_measured[0][0,:].std(),
-                   Intensity_measured[1][0,:].std(),
-                   Intensity_measured[2][0,:].std()]))
-plt.show()
 
 
 ## Load and Plot tissue sensitivity data calculated with RedBird
