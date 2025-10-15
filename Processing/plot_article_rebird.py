@@ -452,14 +452,28 @@ for j in range(integration_time_s.shape[0]):
         print("ti ",integration_time_s[j],"binning", binning, "SNR ",SNR_y, "size signal: ",binned_signal.shape)
 
 
-# plt.figure()
-# for j in range(integration_time_s_Mini_CYRIL.shape[0]):
-#
-#     file = glob.glob(path+"*"+str(SD_separations_cm_Mini_CYRIL[0])+"cm_"+str(integration_time_s_Mini_CYRIL[j])+"s*")
-#     data = scipy.io.loadmat(file[0])
-#     plt.plot(Mini_CYRIL_wavelength,data['Spectra'].mean(axis=0),label=str(integration_time_s_Mini_CYRIL[j]))
-# plt.legend(loc="best")
-# plt.show()
+plt.figure()
+plt.subplot(131)
+plt.plot(Intensity_measured[0][0,:],'r',label="1s")
+plt.plot(Intensity_measured[1][0,:],'g',label="5s")
+plt.plot(Intensity_measured[2][0,:],'b',label="10s")
+plt.ylim(0,13000)
+plt.legend(loc="best")
+
+plt.subplot(132)
+plt.plot(Intensity_measured[0][1,:],'r',label="1s")
+plt.plot(Intensity_measured[1][1,:],'g',label="5s")
+plt.plot(Intensity_measured[2][1,:],'b',label="10s")
+plt.legend(loc="best")
+plt.ylim(0,13000)
+
+plt.subplot(133)
+plt.plot(Intensity_measured[0][2,:],'r',label="1s")
+plt.plot(Intensity_measured[1][2,:],'g',label="5s")
+plt.plot(Intensity_measured[2][2,:],'b',label="10s")
+plt.legend(loc="best")
+plt.ylim(0,13000)
+plt.show()
 
 
 
@@ -1096,11 +1110,13 @@ wavelength = 780
 path = main_path + "simulations/Redbird/"
 data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
 dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
+SD_separation_cm = np.array([3, 4, 5])
 
 
 
 
 ft = 23
+ft_legend = 20
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 plt.rcParams.update({'font.size': ft})
@@ -1166,12 +1182,12 @@ for int_time_s in np.array([1,5,10]):
 
 plt.close('all')
 fig = plt.figure(tight_layout=True)
-gs = gridspec.GridSpec(3, 1)
+gs = gridspec.GridSpec(4, 1, height_ratios=[1, 1, 0.1, 1])
 
 ax = fig.add_subplot(gs[0,0])
 ax.set_title("Placenta sensitivity",fontsize = ft)
-plots = ax.violinplot(np.asarray(S_placenta_m).T*100, showmedians=True, showmeans=False,quantiles=[[0.25,0.75],[0.25,0.75],[0.25,0.75]])
-plots['cmedians'].set_colors(c[id])
+plots = ax.violinplot(np.asarray(S_placenta_m).T*100, showmedians=False, showmeans=True,quantiles=[[0.25,0.75],[0.25,0.75],[0.25,0.75]])
+plots['cmeans'].set_colors(c[id])
 plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([1,2,3]))
 ax.set_xticklabels(np.array(["3","4","5"]),fontsize=ft)
@@ -1187,10 +1203,10 @@ ax.set_ylim(0,100)
 #Detection probability
 ax = fig.add_subplot(gs[1,0])
 ax.set_title("Detection probability",fontsize = ft)
-plots = ax.violinplot(np.asarray(P_detection_m).T*100, showmedians=True, showmeans=False)#,quantiles=quantiles_vec)
+plots = ax.violinplot(np.asarray(P_detection_m).T*100, showmedians=False, showmeans=True)#,quantiles=quantiles_vec)
 for pc, color in zip(plots['bodies'], colors):
     pc.set_facecolor(color)
-plots['cmedians'].set_colors(c[id])
+plots['cmeans'].set_colors(c[id])
 # plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([3.5,9.5,15.5]))
 ax.set_xticklabels(np.array(["3","4","5"]),fontsize=ft)
@@ -1200,16 +1216,26 @@ ax.axvline(6.5,0,100,color='k',linewidth=3)
 ax.axvline(12.5,0,100,color='k',linewidth=3)
 ax.grid()
 ax.set_ylim(0,100)
-ax.legend(handles=patches,loc="best", borderaxespad=0. ,fontsize = ft)
+
+# ax.legend(handles=patches,loc="upper right", bbox_to_anchor=(1.02, 1.0) ,fontsize = ft)
+
+
+# Place one legend in the figure coordinates
+# y = 0.37 is ~between 2nd and 3rd subplot → adjust as needed
+fig.legend(handles=patches,
+           loc="lower center", bbox_to_anchor=(0.5, 0.32),
+           ncol=3, frameon=False,fontsize = ft_legend)
+
+
 
 
 #Scanning probability
-ax = fig.add_subplot(gs[2,0])
+ax = fig.add_subplot(gs[3,0])
 ax.set_title("Placenta scanning probability",fontsize = ft)
-plots = ax.violinplot(np.asarray(P_scanning_m).T*100, showmedians=True, showmeans=False)#,quantiles=quantiles_vec)
+plots = ax.violinplot(np.asarray(P_scanning_m).T*100, showmedians=False, showmeans=True)#,quantiles=quantiles_vec)
 for pc, color in zip(plots['bodies'], colors):
     pc.set_facecolor(color)
-plots['cmedians'].set_colors(c[id])
+plots['cmeans'].set_colors(c[id])
 # plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([3.5,9.5,15.5]))
 ax.set_xticklabels(np.array(["3","4","5"]),fontsize=ft)
@@ -1267,31 +1293,28 @@ simu_vec = []
 
 
 
-for i in range(integration_time_s.shape[0]):
+for IT in np.array([1,10]):
+
+
+    idx_IT = np.where(integration_time_s==IT)[0][0]
     #Plot mu_p_phantom
-    mup_min, sigma, binned_signal = get_minimum_sensitivity_threshold_normalization(1,Intensity_measured[i],dr_phantom)
+    mup_min, sigma, binned_signal = get_minimum_sensitivity_threshold_normalization(1,Intensity_measured[idx_IT],dr_phantom)
 
     mup_min_vec.append(mup_min)
-    # mes_vec.append(binned_signal)
-    # ax1.plot(SD_separations_mm,mup_min,color=colors[id],linewidth=lw,label=device+ " (IT = "+str(integration_time_s[i])+" s)")
 
 
-    mup_min, sigma, binned_signal = get_minimum_sensitivity_threshold_normalization(nb_binning,Intensity_measured[i],dr_phantom)
+    mup_min, sigma, binned_signal = get_minimum_sensitivity_threshold_normalization(nb_binning,Intensity_measured[idx_IT],dr_phantom)
     mup_min_vec.append(mup_min)
-    # mes_vec.append(binned_signal)
-    # ax1.plot(SD_separations_mm,mup_min,color=colors[id+1],linewidth=lw,label=device+ " (IT = "+str(integration_time_s[i])+" s, temporal binning 10)")
 
 
-
-
-    SNR.append(Intensity_measured[i].mean(axis=1)/Intensity_measured[i].std(axis=1))
-    mes_vec.append(Intensity_measured[i].std(axis=1))
-    label.append("Mini CYRIL (IT = "+str(integration_time_s[i])+" s)")
+    SNR.append(Intensity_measured[idx_IT].mean(axis=1)/Intensity_measured[idx_IT].std(axis=1))
+    mes_vec.append(Intensity_measured[idx_IT].std(axis=1))
+    label.append("Mini CYRIL (IT = "+str(integration_time_s[idx_IT])+" s)")
     id +=1
 
 
-    sig = process_Binning(Intensity_measured[i],nb_binning)
-    label.append("Mini CYRIL (IT = "+str(integration_time_s[i])+" s, temporal binning "+str(nb_binning)+")")
+    sig = process_Binning(Intensity_measured[idx_IT],nb_binning)
+    label.append("Mini CYRIL (IT = "+str(integration_time_s[idx_IT])+" s, temporal binning "+str(nb_binning)+")")
     SNR.append(sig.mean(axis=1)/sig.std(axis=1))
     mes_vec.append(sig.std(axis=1))
     id +=1
@@ -1303,7 +1326,7 @@ mup_min_vec = np.asarray(mup_min_vec).T
 mes_vec = np.asarray(mes_vec).T
 
 #Bar plot
-width = 0.1
+width = 0.2
 xbar = np.arange(SD_separations_mm.shape[0])
 
 
@@ -1326,7 +1349,7 @@ ax1.set_title("Minimum detectable diffuse reflectance of Mini CYRIL device",font
 ax1.legend(loc="best",fontsize=ft_legend)
 ax1.set_xlabel("Source detector separation (mm)",fontsize=ft)
 ax1.set_ylabel("$\phi_{min}$ (a. u.)",fontsize=ft)
-ax1.set_xticks(np.arange(SD_separations_mm.shape[0])+5*width/2,np.array(["30","40","50"]),fontsize=ft)
+ax1.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
 ax1.tick_params(axis='both', which='major', labelsize=ft)
 ax1.grid()
 
@@ -1334,7 +1357,7 @@ ax3.set_title("Signal to Noise Ratio (SNR) of Mini CYRIL device",fontsize=ft)
 ax3.legend(loc="best",fontsize=ft_legend)
 ax3.set_xlabel("Source detector separation (mm)",fontsize=ft)
 ax3.set_ylabel("SNR",fontsize=ft)
-ax3.set_xticks(np.arange(SD_separations_mm.shape[0])+5*width/2,np.array(["30","40","50"]),fontsize=ft)
+ax3.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
 ax3.grid()
 ax3.tick_params(axis='both', which='major', labelsize=ft)
 
