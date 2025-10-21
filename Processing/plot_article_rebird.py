@@ -243,6 +243,11 @@ def SRS(Attenuation,SD_separations_in_mm,WAVELENGTHS,ext_coeffs_inv):
         _StO2 = 0
     return _StO2
 
+
+
+def calculate_steady_state_DR():
+
+
 ## Read data measured by he clinical team
 
 # Extract thickness from segmentation files
@@ -1805,5 +1810,117 @@ plt.ylabel("Estimated $PltO_2$ (%)",fontsize=ft)
 
 plt.legend(loc="best",fontsize=ft)
 plt.grid()
+
+plt.show()
+
+
+## Compare MCX and Redbird values
+
+
+path = main_path + "simulations/Redbird/compare_MCX_Redbird/"
+
+
+thickness_layers_mm = np.array([3, 5, 12])
+
+SD_separation_cm_array = np.array([3, 4, 5])
+SD_separation_id = 0
+
+
+data_MCX = scipy.io.loadmat(path+"MCX.mat")
+MCX_DR = data_MCX['Diffuse_reflectance']
+MCX_Sensitivity_profile = data_MCX['Sensitivity_profile']
+MCX_Sensitivity_index = data_MCX['Sensitivity_indexes']
+
+
+data_Redbird = scipy.io.loadmat(path+"Redbird.mat")
+Redbird_Sensitivity_profile = data_Redbird['sensitivity_profile']
+Redbird_Sensitivity_index = data_Redbird['Sensitivity_indexes']
+
+src_pos = np.squeeze(data_Redbird['src_pos'])
+det_pos = np.squeeze(data_Redbird['det_pos'])
+det_pos = det_pos[SD_separation_id]
+
+
+depth = 30
+S = MCX_Sensitivity_profile[:,:,:,SD_separation_id]
+S = S/S.max()
+map_MCX = S[det_pos[0],src_pos[1]-10:det_pos[1]+10,0:depth].copy()
+map_MCX = 100*map_MCX.T
+
+
+S = Redbird_Sensitivity_profile[:,:,:,SD_separation_id]
+S = S/S.max()
+map_Redbird = S[src_pos[1]-10:det_pos[1]+10,det_pos[0],0:depth].copy()
+map_Redbird = 100*map_Redbird.T
+
+
+# levels = [1e-5,1e-4,1e-3,1e-2,1e-1,1,10,100]
+levels = [1e-3,5e-3,1e-2,5e-2,1e-1,5e-1,1,5,10,50,100]
+
+
+
+ft = 23
+ft_txt = 20
+lw = 3
+plt.close('all')
+plt.figure()
+
+plt.rcParams.update({'font.size': ft})
+
+
+
+
+#interpolate
+reso = 1
+x = np.arange(0,map_Redbird.shape[1]*reso,reso)
+y = np.arange(0,map_Redbird.shape[0]*reso,reso)
+interp_map_Redbird = interpolate.RegularGridInterpolator((y, x),map_Redbird,bounds_error=False, fill_value=None)
+interp_map_MCX = interpolate.RegularGridInterpolator((y, x),map_MCX,bounds_error=False, fill_value=None)
+
+x_interp = np.linspace(x[0],x[-1],x.shape[0]*4)
+y_interp = np.linspace(y[0],y[-1],y.shape[0]*4)
+
+
+map_interp_Redbird = np.zeros((y_interp.shape[0],x_interp.shape[0]))
+map_interp_MCX = np.zeros((y_interp.shape[0],x_interp.shape[0]))
+
+for i in range(x_interp.shape[0]):
+    for j in range(y_interp.shape[0]):
+        map_interp_Redbird[j,i] = interp_map_Redbird((y_interp[j], x_interp[i]))
+        map_interp_MCX[j,i] = interp_map_MCX((y_interp[j], x_interp[i]))
+
+
+
+vec_map = [map_interp_Redbird, map_interp_MCX]
+title = ["Redbird", "MCX"]
+
+plt.close('all')
+plt.figure()
+
+for i in range(2):
+    p=plt.subplot(1,2,i+1)
+    plt.title(title[i],fontsize=ft)
+    im = plt.contourf(x_interp, y_interp,vec_map[i],levels = [1e-5,1e-4,1e-3,1e-2,1e-1,1,10,100], locator=ticker.LogLocator(),cmap='plasma')
+
+    plt.plot(x_interp,thickness_layers_mm[0]*np.ones(x_interp.shape),'k',linestyle=':',linewidth = lw)
+    plt.plot(x_interp,thickness_layers_mm[1]*np.ones(x_interp.shape),'k',linestyle=':',linewidth = lw)
+    plt.plot(x_interp,thickness_layers_mm[2]*np.ones(x_interp.shape),'k',linestyle=':',linewidth = lw)
+
+    plt.plot(10,0,'ko',markersize=12,label="Source")
+    plt.plot(10+SD_separation_cm_array[SD_separation_id]*10,0,'go',markersize=12,label="Detector")
+
+    plt.text(1,thickness_layers_mm[0]-0.2,"Skin",fontsize=ft_txt)
+    plt.text(1,thickness_layers_mm[1]-0.2,"Adipose tissue",fontsize=ft_txt)
+    plt.text(1,thickness_layers_mm[2]-0.2,"Muscle",fontsize=ft_txt)
+    plt.text(1,thickness_layers_mm[2]+0.5,"Placenta",fontsize=ft_txt)
+
+    c = plt.colorbar(im)
+    c.set_label("Sensitivity probability (%)",fontsize=ft)
+    p.invert_yaxis()
+    # plt.xticks(x)
+    # plt.yticks(y)
+    plt.xlabel("Tissue width (mm)",fontsize=ft)
+    plt.ylabel("Tissue depth (mm)",fontsize=ft)
+    plt.legend(loc="best",fontsize=ft)
 
 plt.show()
