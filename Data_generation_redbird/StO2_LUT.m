@@ -77,8 +77,8 @@ for p=1:length(SatO2_muscle_array)
         f_mel = f_melanosome(f);
 
         %Output
-        Diffuse_reflectance = zeros(length(detectors_SD_mm), length(Lambda_array));
-        Fluence_at_fiber_detector = zeros(length(detectors_SD_mm), length(Lambda_array));
+        Phi_detval = zeros(length(detectors_SD_mm), length(Lambda_array));
+        DR_at_fiber_detector = zeros(length(detectors_SD_mm), length(Lambda_array));
 
 
         for i_Lambdas = 1:length(Lambda_array)
@@ -90,14 +90,14 @@ for p=1:length(SatO2_muscle_array)
             fprintf(1,strcat('Calculating sensitivity index\n'));
         
             %Calculate sensisitivity profile
-            [sensitivity_profile, DR, F_det] = get_sensitivity_profiles(cfg, optical_prop);
-            Diffuse_reflectance(:,i_Lambdas) = DR;
-            Fluence_at_fiber_detector(:,i_Lambdas) = F_det;
+            [sensitivity_profile, Phi_det, DR_det] = get_sensitivity_profiles(cfg, optical_prop);
+            Phi_detval(:,i_Lambdas) = Phi_det;
+            DR_at_fiber_detector(:,i_Lambdas) = DR_det;
   
             
         end
         output_name = strcat(outdir,'/out_subject_',num2str(subject),'St_muscle_',num2str(SatO2_muscle),'_St_placenta_',num2str(SatO2_placenta),'_fmel_',num2str(f_mel),'.mat');
-        save(output_name,'Diffuse_reflectance','Fluence_at_fiber_detector');
+        save(output_name,'Phi_detval','DR_at_fiber_detector');
         
                             
     end

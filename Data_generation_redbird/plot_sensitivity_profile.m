@@ -50,7 +50,7 @@ optical_prop = process_optical_properties_skin_Fat_muscle_placenta(Lambdas,f_mel
 
 
 %Calculate sensisitivity profile
-[sensitivity_profile, Diffuse_reflectance, Fluence_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Phi_detval, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
 
 %Calculate sensiticity indexes
 % S_index = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);

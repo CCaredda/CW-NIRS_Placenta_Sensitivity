@@ -70,12 +70,12 @@ cfg.reso_detector_mm = 0.1;
 fprintf(1,strcat('Calculating sensitivity index\n'));
 
 %Calculate sensisitivity profile
-[sensitivity_profile, Diffuse_reflectance, Fluence_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Phi_detval, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
 
 %Calculate sensiticity indexes
 Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
 
 
-save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Diffuse_reflectance','Sensitivity_indexes', 'Fluence_at_fiber_detector');
+save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector');
 
 

@@ -93,14 +93,14 @@ for thickness_skin_in_mm = skin_thickness_array_mm
                                 optical_prop = process_optical_properties_skin_Fat_muscle_placenta(Lambdas,f_mel,SatO2_muscle, SatO2_placenta,C_HbT_muscle,C_HbT_placenta);
                                 
                                 %Calculate sensisitivity profile
-                                [sensitivity_profile, Diffuse_reflectance, Fluence_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+                                [sensitivity_profile, Phi_detval, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
                                 
                                 %Calculate sensiticity indexes
                                 Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
 
                                 %Save outputs
                                 output_name = strcat(outdir,'/out_St_muscle_',num2str(SatO2_muscle),'_St_placenta_',num2str(SatO2_placenta),'_Thick_skin_',num2str(thickness_skin_in_mm),'_Thick_adipose_',num2str(thickness_adipose_in_mm),'_Thick_muscle_',num2str(thickness_muscle_in_mm),'f_mel',num2str(f_mel),'_HbT_muscle_umol_',num2str(C_HbT_muscle*1e6),'_HbT_placenta_umol_',num2str(C_HbT_placenta*1e6),'.mat');
-                                save(output_name,'Diffuse_reflectance','Sensitivity_indexes', 'Fluence_at_fiber_detector');
+                                save(output_name,'Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector');
                                 
                             end
                         end

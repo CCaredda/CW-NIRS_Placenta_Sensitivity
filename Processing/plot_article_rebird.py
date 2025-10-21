@@ -244,8 +244,27 @@ def SRS(Attenuation,SD_separations_in_mm,WAVELENGTHS,ext_coeffs_inv):
     return _StO2
 
 
+#Equation 6 in Kienle et al 1997
+def Rf(p,mua, musp):
 
-def calculate_steady_state_DR():
+    D = 1/(3*(mua+musp))
+    z0 = (mua+musp)**(-1)
+
+    Reff = 0.493
+    zb = ((1+Reff)/(1-Reff))*(2*D)
+
+    r1 = np.sqrt(z0**2+p**2)
+    r2 = np.sqrt( (z0+2*zb)**2 + p**2)
+
+
+    steady_state_DR = 1/(4*np.pi) * ( (z0*(mu_eff +1/r1) * (np.exp(-mu_eff*r1)/(r1**2))) +
+                                    ((z0+2*zb)*(mu_eff+1/r2)*np.exp(-mu_eff*r2)/(r2**2)))
+
+    return steady_state_DR
+
+#Equation 8 in Kienle et al 1997
+def Rs(p, mua, musp, F_det):
+    return 0.118*F_det+0.306*Rf(p,mua,musp)
 
 
 ## Read data measured by he clinical team

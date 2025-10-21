@@ -42,8 +42,8 @@ detectors_SD_mm = [30 40 50];
 
 %Output
 Sensitivity_indexes = zeros(length(detectors_SD_mm), 4, length(thickness_skin_mm));
-Diffuse_reflectance = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
-Fluence_at_fiber_detector = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
+Phi_detval = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
+DR_at_fiber_detector = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
 
 
 
@@ -79,7 +79,7 @@ for subject=1:length(thickness_skin_mm)
     %Get Sensitivity indexes for the 4 layers
     fprintf(1,strcat('Calculating sensitivity index\n'));
     %Calculate sensisitivity profile
-    [sensitivity_profile, DR, F_det] = get_sensitivity_profiles(cfg, optical_prop);
+    [sensitivity_profile, Phi_det, DR_det] = get_sensitivity_profiles(cfg, optical_prop);
     
     
     %Calculate sensiticity indexes
@@ -87,8 +87,8 @@ for subject=1:length(thickness_skin_mm)
 
     
     Sensitivity_indexes(:,:,subject) = S;
-    Diffuse_reflectance(:,subject) = DR;
-    Fluence_at_fiber_detector(:,subject) = F_det;
+    Phi_detval(:,subject) = Phi_det;
+    DR_at_fiber_detector(:,subject) = DR_det;
     
 
     
@@ -96,6 +96,6 @@ for subject=1:length(thickness_skin_mm)
 end
 
 
-save(strcat('Data_subjects_',num2str(Lambdas),'.mat'),'Diffuse_reflectance','Sensitivity_indexes', 'Fluence_at_fiber_detector');
+save(strcat('Data_subjects_',num2str(Lambdas),'.mat'),'Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector');
 
 
