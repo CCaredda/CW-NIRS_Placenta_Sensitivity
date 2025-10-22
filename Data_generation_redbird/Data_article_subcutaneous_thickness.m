@@ -2,7 +2,7 @@ clear
 close all
 clc
 
-cluster = 0;
+cluster = 1;
 
 % Add path
 if cluster ==1
@@ -29,14 +29,13 @@ ydim_mm = 200;
 zdim_mm = 200;
 % max_vol_mesh = [0.1; 0.1; 1; 1000];
 % max_vol_mesh = [0.5; 0.5; 1; 10000];
-max_vol_mesh = [1; 3; 3; 10000];
+max_vol_mesh = [1; 1; 1; 10000];
 
-% thickness_layers_mm_array = [2 2 7; ...
-%                              2 4 10; ...
-%                              2 5 12; ...
-%                              2 7 17];
-
-thickness_layers_mm_array = [1 5 12; ...
+thickness_layers_mm_array = [2 2 7; ...
+                             2 4 10; ...
+                             2 5 12; ...
+                             2 7 17; ...
+                             1 5 12; ...
                              2 5 12; ...
                              3 5 12];
 
@@ -76,8 +75,8 @@ for subject=1:size(thickness_layers_mm_array,1)
 
         %Calculate optical properties for each layers
 
-        C_HbT_muscle = 35*1e-6;
-        C_HbT_placenta = 35*1e-6;
+        C_HbT_muscle = 2=35*1e-6;
+        C_HbT_placenta = 2=35*1e-6;
         SatO2_muscle = 0.6;
         SatO2_placenta = 0.8;
         f_mel = 0.0255;

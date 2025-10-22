@@ -29,7 +29,7 @@ function [Sensitivity_profile, phi_detval, DR_at_fiber_detector] = get_sensitivi
     DR_at_fiber_detector = [];
     Phi_volume = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), phi(:,1), xi, yi, zi);
     
-    %Calculate derivative of fluence along z axis
+    %Calculate derivative of fluence along z axis (resolution is 1mm3)
     [Fx,Fy,Fz] = gradient(Phi_volume,1,1,1);
     
     %info interpolated image
@@ -57,14 +57,14 @@ function [Sensitivity_profile, phi_detval, DR_at_fiber_detector] = get_sensitivi
         %Select image around detector
         %Detector is at position [ceil(radius_fiber_det_mm)+1 , ceil(radius_fiber_det_mm)+1]
         Phi_around_det = Phi_volume(cfg.detpos(i,2)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,2)+1 + ceil(cfg.radius_fiber_det_mm) , ...
-                                     cfg.detpos(i,1)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,1)+1 + ceil(cfg.radius_fiber_det_mm),1);
+                                    cfg.detpos(i,1)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,1)+1 + ceil(cfg.radius_fiber_det_mm),1);
                                      
-	dPhi_dz_around_det = Phi_volume(cfg.detpos(i,2)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,2)+1 + ceil(cfg.radius_fiber_det_mm) , ...
-                                     cfg.detpos(i,1)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,1)+1 + ceil(cfg.radius_fiber_det_mm),1);
+	    dPhi_dz_around_det = Fz(cfg.detpos(i,2)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,2)+1 + ceil(cfg.radius_fiber_det_mm) , ...
+                                cfg.detpos(i,1)+1 - ceil(cfg.radius_fiber_det_mm) : cfg.detpos(i,1)+1 + ceil(cfg.radius_fiber_det_mm),1);
                                                  
                                                  
- 	%Calculate diffuse reflectance
- 	DR = calculate_Diffuse_Reflectance_from_Fluence(Phi_around_det, dPhi_dz_around_det, 1, optical_prop.n_skin, optical_prop.mua_skin, (optical_prop.mu_s_skin)*(1-optical_prop.g_skin) );
+ 	    %Calculate diffuse reflectance
+ 	    DR = calculate_Diffuse_Reflectance_from_Fluence(Phi_around_det, dPhi_dz_around_det, 1, optical_prop.n_skin, optical_prop.mua_skin, (optical_prop.mu_s_skin)*(1-optical_prop.g_skin) );
         
         %Interpolate image around detector to match reso_detector_mm
         Rin  = imref2d(size(DR), [0 2*ceil(cfg.radius_fiber_det_mm)], [0 2*ceil(cfg.radius_fiber_det_mm)]); 

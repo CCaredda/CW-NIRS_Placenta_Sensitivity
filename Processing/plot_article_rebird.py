@@ -244,29 +244,6 @@ def SRS(Attenuation,SD_separations_in_mm,WAVELENGTHS,ext_coeffs_inv):
     return _StO2
 
 
-#Equation 6 in Kienle et al 1997
-def Rf(p,mua, musp):
-
-    D = 1/(3*(mua+musp))
-    z0 = (mua+musp)**(-1)
-
-    Reff = 0.493
-    zb = ((1+Reff)/(1-Reff))*(2*D)
-
-    r1 = np.sqrt(z0**2+p**2)
-    r2 = np.sqrt( (z0+2*zb)**2 + p**2)
-
-
-    steady_state_DR = 1/(4*np.pi) * ( (z0*(mu_eff +1/r1) * (np.exp(-mu_eff*r1)/(r1**2))) +
-                                    ((z0+2*zb)*(mu_eff+1/r2)*np.exp(-mu_eff*r2)/(r2**2)))
-
-    return steady_state_DR
-
-#Equation 8 in Kienle et al 1997
-def Rs(p, mua, musp, F_det):
-    return 0.118*F_det+0.306*Rf(p,mua,musp)
-
-
 ## Read data measured by he clinical team
 
 # Extract thickness from segmentation files
@@ -513,8 +490,9 @@ path_data = main_path+"simulations/Redbird/data_article_"+str(wavelength)+"/"
 HbT_placenta_array = np.array([15,25,35,50])
 SD_separation_cm = np.array([3, 4, 5])
 
-ft = 23
-ft_label = 23
+#23
+ft = 17
+ft_label = 17
 plt.rcParams.update({'font.size': ft})
 
 skin_thickness_subject_mm = np.array([1, 2, 3])
@@ -566,11 +544,16 @@ for id_mel in range(f_melanosome.shape[0]):
 
         ax1 = fig1.add_subplot(3,3,i+1+(3*(id_mel)))
         ax1.set_title("Placenta depth "+str(dist_to_plancenta_subjects_mm[i])+" mm",fontsize=ft)
-        im = ax1.pcolor(T_x,T_y,Placenta_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=70)
+        im = ax1.pcolor(T_x,T_y,Placenta_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=50)
 
         for x_id,xval in enumerate(x):
             for y_id,yval in enumerate(y):
-                ax1.text(xval-0.15,yval,str(int(10000*Placenta_sensitivity_redbird[y_id,x_id])/100),color=colors[i],fontsize=ft)
+                if(100*Placenta_sensitivity_redbird[y_id,x_id] < 10):
+                    c="w"
+                else:
+                    c="k"
+
+                ax1.text(xval-0.15,yval,str(int(10000*Placenta_sensitivity_redbird[y_id,x_id])/100),color=c,fontsize=ft)
 
         cb = fig1.colorbar(im, ax=ax1)
         cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
@@ -594,8 +577,7 @@ wavelength = 780
 # Load phantom
 path = main_path + "simulations/Redbird/"
 data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
-# dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
-dr_phantom = np.squeeze(data_phantom['Fluence_at_fiber_detector'])
+dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
 
 
 #Load tissue sensitivity
@@ -658,8 +640,7 @@ for i in range(skin_thickness_subject_mm.shape[0]):
     Placenta_sensitivity_redbird[i,:] = data['Sensitivity_indexes'][:,3]
     Muscle_sensitivity_redbird[i,:] = data['Sensitivity_indexes'][:,2]
 
-    # val = np.squeeze(data['Diffuse_reflectance'])/Coeff
-    val = np.squeeze(data['Fluence_at_fiber_detector'])/Coeff
+    val = np.squeeze(data['DR_at_fiber_detector'])/Coeff
 
 
     for d in range(SD_separation_cm.shape[0]):
@@ -709,8 +690,7 @@ for i in range(skin_thickness_subject_mm.shape[0]):
     Placenta_sensitivity_redbird2[i,:] = data['Sensitivity_indexes'][:,3]
     Muscle_sensitivity_redbird2[i,:] = data['Sensitivity_indexes'][:,2]
 
-    # val = np.squeeze(data['Diffuse_reflectance'])/Coeff
-    val = np.squeeze(data['Fluence_at_fiber_detector'])/Coeff
+    val = np.squeeze(data['DR_at_fiber_detector'])/Coeff
 
 
     for d in range(SD_separation_cm.shape[0]):
@@ -1031,8 +1011,7 @@ wavelength = 780
 # Load phantom
 path = main_path + "simulations/Redbird/"
 data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
-# dr_phantom = np.squeeze(data_phantom['Diffuse_reflectance'])
-dr_phantom = np.squeeze(data_phantom['Fluence_at_fiber_detector'])
+dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
 
 
 
@@ -1093,8 +1072,7 @@ for id_mel in range(f_melanosome.shape[0]):
             '_HbT_placenta_umol_'+str(v_p) +'.mat')
 
 
-            # val = np.squeeze(data['Diffuse_reflectance'])/Coeff
-            val = np.squeeze(data['Fluence_at_fiber_detector'])/Coeff
+            val = np.squeeze(data['DR_at_fiber_detector'])/Coeff
 
 
             for d in range(SD_separation_cm.shape[0]):
