@@ -5,6 +5,8 @@ clc
 
 cluster = 0;
 
+subject = 1;
+
 % Add path
 if cluster ==1
     addpath('~/private/redbird/matlab');
@@ -27,7 +29,9 @@ xdim_mm = 200;
 ydim_mm = 200;
 zdim_mm = 200;
 % max_vol_mesh = [0.1; 0.1; 1; 1000];
-max_vol_mesh = [0.5; 0.5; 1; 10000];
+% max_vol_mesh = [0.5; 0.5; 1; 10000];
+max_vol_mesh = [1; 1; 1; 10000];
+
 
 thickness_layers_mm_array = [1 2 7; ...
                              2 4 10; ...
@@ -52,8 +56,6 @@ if ~exist(outdir, 'dir')
     mkdir(outdir)
 end
 
-
-subject=1;
     
 clear cfg;
 
@@ -79,7 +81,7 @@ for p=1:length(SatO2_muscle_array)
         %Output
         Phi_detval = zeros(length(detectors_SD_mm), length(Lambda_array));
         DR_at_fiber_detector = zeros(length(detectors_SD_mm), length(Lambda_array));
-
+        Phi_at_fiber_detector = zeros(length(detectors_SD_mm), length(Lambda_array));
 
         for i_Lambdas = 1:length(Lambda_array)
             % Calculate optical properties
@@ -90,14 +92,14 @@ for p=1:length(SatO2_muscle_array)
             fprintf(1,strcat('Calculating sensitivity index\n'));
         
             %Calculate sensisitivity profile
-            [sensitivity_profile, Phi_det, DR_det] = get_sensitivity_profiles(cfg, optical_prop);
+            [sensitivity_profile, Phi_det, Fluence_at_fiber_detector, DR_det] = get_sensitivity_profiles(cfg, optical_prop);
             Phi_detval(:,i_Lambdas) = Phi_det;
             DR_at_fiber_detector(:,i_Lambdas) = DR_det;
-  
+            Phi_at_fiber_detector(:,i_Lambdas) = Fluence_at_fiber_detector;
             
         end
         output_name = strcat(outdir,'/out_subject_',num2str(subject),'St_muscle_',num2str(SatO2_muscle),'_St_placenta_',num2str(SatO2_placenta),'_fmel_',num2str(f_mel),'.mat');
-        save(output_name,'Phi_detval','DR_at_fiber_detector');
+        save(output_name,'Phi_detval','DR_at_fiber_detector','Phi_at_fiber_detector');
         
                             
     end

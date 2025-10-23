@@ -49,7 +49,7 @@ xdim_mm = volume_square_size;
 ydim_mm = volume_square_size;
 zdim_mm = volume_square_size;
 % max_vol_mesh = [0.1; 0.1; 1; 1000];
-max_vol_mesh = [0.5; 0.5; 1; 10000];
+max_vol_mesh = [1; 1; 1; 10000];
 
 %Info detectors
 detectors_SD_mm = [30, 40, 50];
@@ -238,7 +238,7 @@ cfg.reso_detector_mm = 0.1;
 
 
 %Calculate sensisitivity profile
-[sensitivity_profile, Phi_at_det, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Phi_at_det, Fluence_at_fiber_detector, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
 
 %Calculate sensiticity indexes
 Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
@@ -247,4 +247,4 @@ Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_
 src_pos = cfg.srcpos;
 det_pos = cfg.detpos;
 output_name = strcat(out_dir,'/Redbird.mat');
-save(output_name,'Phi_at_det','Sensitivity_indexes', 'DR_at_fiber_detector', 'sensitivity_profile','src_pos','det_pos');
+save(output_name,'Phi_at_det','Sensitivity_indexes', 'DR_at_fiber_detector', 'sensitivity_profile','Fluence_at_fiber_detector','src_pos','det_pos');

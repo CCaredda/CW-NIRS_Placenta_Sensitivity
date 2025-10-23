@@ -49,22 +49,10 @@ optical_prop = process_optical_properties_skin_Fat_muscle_placenta(Lambdas,f_mel
 
 
 
+
 %Calculate sensisitivity profile
-[sensitivity_profile, Phi_detval, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Phi_det, Fluence_at_fiber_detector, DR_det] = get_sensitivity_profiles(cfg, optical_prop);
 
-%Calculate sensiticity indexes
-% S_index = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
-
-
-% %Init output
-% Sensitivity_proba = zeros(xdim_mm,ydim_mm,zdim_mm,size(sensitivity_profile,2));
-% 
-% %interpolate volume
-% for d=1:size(sensitivity_profile,2)
-%     [xi, yi, zi] = meshgrid(0.5:xdim_mm-0.5, 0.5:ydim_mm-0.5, 0.5:zdim_mm-0.5);
-%     Sensitivity_proba(:,:,:,d) = griddata(cfg.node(:,1), cfg.node(:,2), cfg.node(:,3), sensitivity_profile(:,d), xi, yi, zi);
-% 
-% end
 
 close all
 figure(1)

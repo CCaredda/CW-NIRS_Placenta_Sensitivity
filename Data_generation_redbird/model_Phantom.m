@@ -26,7 +26,8 @@ xdim_mm = 200;
 ydim_mm = 200;
 zdim_mm = 200;
 % max_vol_mesh = [0.1; 0.1; 1; 1000];
-max_vol_mesh = [0.5; 0.5; 1; 10000];
+%max_vol_mesh = [0.5; 0.5; 1; 10000];
+max_vol_mesh = [1; 1; 1; 10000];
 
 %Source detector separation in mm
 detectors_SD_mm = [30 40 50];
@@ -69,13 +70,15 @@ cfg.reso_detector_mm = 0.1;
 %Get Sensitivity indexes for the 4 layers
 fprintf(1,strcat('Calculating sensitivity index\n'));
 
+
 %Calculate sensisitivity profile
-[sensitivity_profile, Phi_detval, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+[sensitivity_profile, Phi_detval, Fluence_at_fiber_detector, DR_at_fiber_detector] = get_sensitivity_profiles(cfg, optical_prop);
+
 
 %Calculate sensiticity indexes
 Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
 
 
-save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector');
+save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector','Fluence_at_fiber_detector');
 
 
