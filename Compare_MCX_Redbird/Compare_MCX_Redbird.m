@@ -69,6 +69,9 @@ end
 
 %% MCX SIMULATIONS %%
 
+%nb noise measurements
+nb_noise = 100;
+
 % Repeat the simulation x times
 repetitions = 1;
 cfg.respin = repetitions;
@@ -163,60 +166,69 @@ slice_tissue = squeeze(cfg.vol(floor(volume_square_size/2),floor(volume_square_s
 
 
 %Init output
-Diffuse_reflectance = zeros(size(det_pos,1),1);
-Sensitivity_indexes = zeros(size(det_pos,1),4);
+Diffuse_reflectance = zeros(size(det_pos,1),nb_noise);
+Sensitivity_indexes = zeros(size(det_pos,1),4,nb_noise);
 Sensitivity_profile = zeros(xdim_mm,ydim_mm,zdim_mm,size(det_pos,1));
 
 
-%Process simulation with light source at the source
-%position
-cfg.srcpos=src_pos;
 
-% Random seed to obtain different results when running multiple simulations for the same input parameters
-cfg.seed = randi([0,99999],1);
+for i_nb_noise=1:nb_noise
 
-% calculate the fluence and partial path lengths
-[fluence,output_det]=mcxlab(cfg);
-  
-% Detector pos
-for i=1:length(det_pos)
-    %Diffuse reflectance
-    Diffuse_reflectance(i) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
+
+	%Process simulation with light source at the source
+	%position
+	cfg.srcpos=src_pos;
+
+	% Random seed to obtain different results when running multiple simulations for the same input parameters
+	cfg.seed = randi([0,99999],1);
+
+	% calculate the fluence and partial path lengths
+	[fluence,output_det]=mcxlab(cfg);
+	  
+	% Detector pos
+	for i=1:length(det_pos)
+	    %Diffuse reflectance
+	    Diffuse_reflectance(i,i_nb_noise) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
+	end
+
+	% Compute simulation at detector location
+	for d = 1:size(det_pos,1)
+	    % Random seed to obtain different results when running multiple simulations for the same input parameters
+	    cfg.seed = randi([0,99999],1);
+	    
+	    %Set light source position
+	    cfg.srcpos= [src_pos(1) det_pos(d,2) src_pos(3)];
+
+	    % calculate the fluence
+	    [flux]=mcxlab(cfg);
+
+	    %Calculate sensitivity profile
+	    S = fluence.data.*flux.data;
+
+	    %Normalize by the sum to get the density
+	    %probability
+	    S = S/sum(S,"all");
+	    Sensitivity_profile(:,:,:,d) = S;
+
+
+	    %Get sensitivity indexes
+	    for m=1:4
+		% Find indices of tissue m
+		indices = find(slice_tissue == m);
+		% Compute sensitivity
+		Sensitivity_indexes(d,m,i_nb_noise) = sum(S(:, :, indices),"all");
+	    end
+	end
+
+	%Save outputs
+	if (i_nb_noise == 1)
+		output_name = strcat(out_dir,'/MCX_sensitivity_profile.mat');
+		save(output_name,'Sensitivity_profile','src_pos','det_pos');
+	else
+		output_name = strcat(out_dir,'/MCX_noisy.mat');
+		save(output_name,'Diffuse_reflectance','Sensitivity_indexes');
+	end
 end
-
-% Compute simulation at detector location
-for d = 1:size(det_pos,1)
-    % Random seed to obtain different results when running multiple simulations for the same input parameters
-    cfg.seed = randi([0,99999],1);
-    
-    %Set light source position
-    cfg.srcpos= [src_pos(1) det_pos(d,2) src_pos(3)];
-
-    % calculate the fluence
-    [flux]=mcxlab(cfg);
-
-    %Calculate sensitivity profile
-    S = fluence.data.*flux.data;
-
-    %Normalize by the sum to get the density
-    %probability
-    S = S/sum(S,"all");
-    Sensitivity_profile(:,:,:,d) = S;
-
-
-    %Get sensitivity indexes
-    for m=1:4
-        % Find indices of tissue m
-        indices = find(slice_tissue == m);
-        % Compute sensitivity
-        Sensitivity_indexes(d,m) = sum(S(:, :, indices),"all");
-    end
-end
-
-%Save outputs
-output_name = strcat(out_dir,'/MCX.mat');
-save(output_name,'Diffuse_reflectance','Sensitivity_indexes','Sensitivity_profile','src_pos','det_pos');
-
 
 %% PROCESS REDBIRD %%
 

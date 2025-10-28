@@ -215,13 +215,13 @@ def get_detection_proba(scaled_dr, sigma_p_phantom_detector, mu_p_min_detector):
     # Detection probability
     sample = np.random.normal(loc = scaled_dr,
                                 scale = sigma_p_phantom_detector,
-                                size = (1000))
+                                size = (1000000))
     # Process T-tests
     t,p = scipy.stats.ttest_1samp(sample,mu_p_min_detector,
                                 alternative='greater')
     return 1-p #Proba to accept alternative hypothesis
 
-def SNR(signal):
+def calculate_SNR(signal):
     return np.mean(signal)/np.std(signal)
 
 def SRS(Attenuation,SD_separations_in_mm,WAVELENGTHS,ext_coeffs_inv):
@@ -463,11 +463,11 @@ plt.figure()
 plt.subplot(231)
 plt.title("Raw signal SD separation 3cm")
 id = 0
-plt.plot(Intensity_measured[0][id,:],'r',label=labels[0]+"\n SNR: "+str(int(SNR(Intensity_measured[0][id,:])))+
+plt.plot(Intensity_measured[0][id,:],'r',label=labels[0]+"\n SNR: "+str(int(calculate_SNR(Intensity_measured[0][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Intensity_measured[0][id,:]))) +
                                                 "\n std: "+str(int(np.std(Intensity_measured[0][id,:]))))
 
-plt.plot(Intensity_measured[2][id,:],'b',label=labels[4]+"\n SNR: "+str(int(SNR(Intensity_measured[2][id,:])))+
+plt.plot(Intensity_measured[2][id,:],'b',label=labels[4]+"\n SNR: "+str(int(calculate_SNR(Intensity_measured[2][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Intensity_measured[2][id,:]))) +
                                                 "\n std: "+str(int(np.std(Intensity_measured[2][id,:]))))
 
@@ -481,11 +481,11 @@ plt.xlabel("Temporal indexes")
 plt.subplot(232)
 plt.title("Raw signal SD separation 4cm")
 id = 1
-plt.plot(Intensity_measured[0][id,:],'r',label=labels[0]+"\n SNR: "+str(int(SNR(Intensity_measured[0][id,:])))+
+plt.plot(Intensity_measured[0][id,:],'r',label=labels[0]+"\n SNR: "+str(int(calculate_SNR(Intensity_measured[0][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Intensity_measured[0][id,:]))) +
                                                 "\n std: "+str(int(np.std(Intensity_measured[0][id,:]))))
 
-plt.plot(Intensity_measured[2][id,:],'b',label=labels[4]+"\n SNR: "+str(int(SNR(Intensity_measured[2][id,:])))+
+plt.plot(Intensity_measured[2][id,:],'b',label=labels[4]+"\n SNR: "+str(int(calculate_SNR(Intensity_measured[2][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Intensity_measured[2][id,:]))) +
                                                 "\n std: "+str(int(np.std(Intensity_measured[2][id,:]))))
 
@@ -498,11 +498,11 @@ plt.xlabel("Temporal indexes")
 plt.subplot(233)
 plt.title("Raw signal SD separation 5cm")
 id = 2
-plt.plot(Intensity_measured[0][id,:],'r',label=labels[0]+"\n SNR: "+str(int(SNR(Intensity_measured[0][id,:])))+
+plt.plot(Intensity_measured[0][id,:],'r',label=labels[0]+"\n SNR: "+str(int(calculate_SNR(Intensity_measured[0][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Intensity_measured[0][id,:]))) +
                                                 "\n std: "+str(int(np.std(Intensity_measured[0][id,:]))))
 
-plt.plot(Intensity_measured[2][id,:],'b',label=labels[4]+"\n SNR: "+str(int(SNR(Intensity_measured[2][id,:])))+
+plt.plot(Intensity_measured[2][id,:],'b',label=labels[4]+"\n SNR: "+str(int(calculate_SNR(Intensity_measured[2][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Intensity_measured[2][id,:]))) +
                                                 "\n std: "+str(int(np.std(Intensity_measured[2][id,:]))))
 
@@ -518,11 +518,11 @@ plt.xlabel("Temporal indexes")
 plt.subplot(234)
 plt.title("Binned signal SD separation 3cm")
 id = 0
-plt.plot(Binned_signal[1][id,:],'r',label=labels[1]+"\n SNR: "+str(int(SNR(Binned_signal[1][id,:])))+
+plt.plot(Binned_signal[1][id,:],'r',label=labels[1]+"\n SNR: "+str(int(calculate_SNR(Binned_signal[1][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Binned_signal[1][id,:]))) +
                                                 "\n std: "+str(int(np.std(Binned_signal[1][id,:]))))
 
-plt.plot(Binned_signal[5][id,:],'b',label=labels[5]+"\n SNR: "+str(int(SNR(Binned_signal[5][id,:])))+
+plt.plot(Binned_signal[5][id,:],'b',label=labels[5]+"\n SNR: "+str(int(calculate_SNR(Binned_signal[5][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Binned_signal[5][id,:]))) +
                                                 "\n std: "+str(int(np.std(Binned_signal[5][id,:]))))
 plt.ylim(0,130000)
@@ -533,11 +533,11 @@ plt.xlabel("Temporal indexes")
 plt.subplot(235)
 plt.title("Binned signal SD separation 4cm")
 id = 1
-plt.plot(Binned_signal[1][id,:],'r',label=labels[1]+"\n SNR: "+str(int(SNR(Binned_signal[1][id,:])))+
+plt.plot(Binned_signal[1][id,:],'r',label=labels[1]+"\n SNR: "+str(int(calculate_SNR(Binned_signal[1][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Binned_signal[1][id,:]))) +
                                                 "\n std: "+str(int(np.std(Binned_signal[1][id,:]))))
 
-plt.plot(Binned_signal[5][id,:],'b',label=labels[5]+"\n SNR: "+str(int(SNR(Binned_signal[5][id,:])))+
+plt.plot(Binned_signal[5][id,:],'b',label=labels[5]+"\n SNR: "+str(int(calculate_SNR(Binned_signal[5][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Binned_signal[5][id,:]))) +
                                                 "\n std: "+str(int(np.std(Binned_signal[5][id,:]))))
 plt.legend(loc="best")
@@ -549,11 +549,11 @@ plt.xlabel("Temporal indexes")
 plt.subplot(236)
 plt.title("Binned signal SD separation 5cm")
 id = 2
-plt.plot(Binned_signal[1][id,:],'r',label=labels[1]+"\n SNR: "+str(int(SNR(Binned_signal[1][id,:])))+
+plt.plot(Binned_signal[1][id,:],'r',label=labels[1]+"\n SNR: "+str(int(calculate_SNR(Binned_signal[1][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Binned_signal[1][id,:]))) +
                                                 "\n std: "+str(int(np.std(Binned_signal[1][id,:]))))
 
-plt.plot(Binned_signal[5][id,:],'b',label=labels[5]+"\n SNR: "+str(int(SNR(Binned_signal[5][id,:])))+
+plt.plot(Binned_signal[5][id,:],'b',label=labels[5]+"\n SNR: "+str(int(calculate_SNR(Binned_signal[5][id,:])))+
                                                 "\n mean: "+str(int(np.mean(Binned_signal[5][id,:]))) +
                                                 "\n std: "+str(int(np.std(Binned_signal[5][id,:]))))
 plt.legend(loc="best")
@@ -568,18 +568,22 @@ plt.show()
 
 
 
-## Load and Plot tissue sensitivity data calculated with RedBird
-
+## Load and Plot tissue sensitivity data
 wavelength = 890
+# method = "Redbird"
+method = "MCX"
+
 
 #Load tissue sensitivity
-path_data = main_path+"simulations/Redbird/data_article_"+str(wavelength)+"/"
+path_data = main_path+"simulations/"+method+"/data_article_"+str(wavelength)+"/"
 HbT_placenta_array = np.array([15,25,35,50])
 SD_separation_cm = np.array([3, 4, 5])
 
-#23
-ft = 23
-ft_label = 23
+
+# ft = 23
+# ft_label = 23
+ft = 15
+ft_label = 15
 plt.rcParams.update({'font.size': ft})
 
 skin_thickness_subject_mm = np.array([1, 2, 3])
@@ -635,10 +639,11 @@ for id_mel in range(f_melanosome.shape[0]):
 
         for x_id,xval in enumerate(x):
             for y_id,yval in enumerate(y):
-                if(100*Placenta_sensitivity_redbird[y_id,x_id] < 10):
+                if(100*Placenta_sensitivity_redbird[y_id,x_id] < 45):
                     c="w"
                 else:
                     c="k"
+
 
                 ax1.text(xval-0.15,yval,str(int(10000*Placenta_sensitivity_redbird[y_id,x_id])/100),color=c,fontsize=ft)
 
@@ -671,9 +676,15 @@ dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
 path_data = main_path+"simulations/Redbird/data_article_subcutaneous/"
 SD_separation_cm = np.array([3, 4, 5])
 
-ft = 18
-ft_label = 10
-ft_text = 10
+# ft = 18
+# ft_label = 10
+# ft_text = 10
+
+ft = 20
+ft_label = 12
+ft_text = 12
+
+
 plt.rcParams.update({'font.size': ft_label})
 
 skin_thickness_subject_mm = np.array([2, 2, 2, 2])
@@ -805,7 +816,11 @@ for x_id,xval in enumerate(x):
             colors = 'w'
         else:
             colors = 'k'
-        ax1.text(xval-0.25,yval,str(int(10000*Detection_proba[y_id,x_id])/100),color=colors,fontsize=ft_text)
+        if Detection_proba[y_id,x_id]*100>95:
+            txt_cell = "*"
+        else:
+            txt_cell = ""
+        ax1.text(xval-0.25,yval,str(int(10000*Detection_proba[y_id,x_id])/100)+txt_cell,color=colors,fontsize=ft_text)
 
 cb = fig1.colorbar(im, ax=ax1)
 cb.set_label("Detection probability (%)",fontsize=ft_label)
@@ -830,7 +845,11 @@ for x_id,xval in enumerate(x):
             colors = 'w'
         else:
             colors = 'k'
-        ax1.text(xval-0.25,yval,str(int(10000*Detection_proba2[y_id,x_id])/100),color=colors,fontsize=ft_text)
+        if Detection_proba2[y_id,x_id]*100>95:
+            txt_cell = "*"
+        else:
+            txt_cell = ""
+        ax1.text(xval-0.25,yval,str(int(10000*Detection_proba2[y_id,x_id])/100)+txt_cell,color=colors,fontsize=ft_text)
 
 cb = fig1.colorbar(im, ax=ax1)
 cb.set_label("Detection probability (%)",fontsize=ft_label)
@@ -875,7 +894,7 @@ im = ax1.pcolor(T_x,T_y,Skin_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=10
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Skin_sensitivity_redbird[y_id,x_id]*100<40:
+        if Skin_sensitivity_redbird[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -900,7 +919,7 @@ im = ax1.pcolor(T_x,T_y,Skin_sensitivity_redbird2*100, cmap=cmap, vmin=0, vmax=1
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Skin_sensitivity_redbird2[y_id,x_id]*100<40:
+        if Skin_sensitivity_redbird2[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -931,7 +950,7 @@ im = ax1.pcolor(T_x,T_y,Adipose_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Adipose_sensitivity_redbird[y_id,x_id]*100<40:
+        if Adipose_sensitivity_redbird[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -956,7 +975,7 @@ im = ax1.pcolor(T_x,T_y,Adipose_sensitivity_redbird2*100, cmap=cmap, vmin=0, vma
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Adipose_sensitivity_redbird2[y_id,x_id]*100<40:
+        if Adipose_sensitivity_redbird2[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -989,7 +1008,7 @@ im = ax1.pcolor(T_x,T_y,Muscle_sensitivity_redbird*100, cmap=cmap, vmin=0, vmax=
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Muscle_sensitivity_redbird[y_id,x_id]*100<40:
+        if Muscle_sensitivity_redbird[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -1014,7 +1033,7 @@ im = ax1.pcolor(T_x,T_y,Muscle_sensitivity_redbird2*100, cmap=cmap, vmin=0, vmax
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Muscle_sensitivity_redbird2[y_id,x_id]*100<40:
+        if Muscle_sensitivity_redbird2[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -1050,7 +1069,7 @@ im = ax1.pcolor(T_x,T_y,Placenta_sensitivity_redbird*100, cmap=cmap, vmin=0, vma
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Placenta_sensitivity_redbird[y_id,x_id]*100<40:
+        if Placenta_sensitivity_redbird[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -1075,7 +1094,7 @@ im = ax1.pcolor(T_x,T_y,Placenta_sensitivity_redbird2*100, cmap=cmap, vmin=0, vm
 
 for x_id,xval in enumerate(x):
     for y_id,yval in enumerate(y):
-        if Placenta_sensitivity_redbird2[y_id,x_id]*100<40:
+        if Placenta_sensitivity_redbird2[y_id,x_id]*100<50:
             colors = 'w'
         else:
             colors = 'k'
@@ -1094,16 +1113,32 @@ plt.show()
 
 
 wavelength = 780
+
+# method = "Redbird"
+method = "MCX"
+
+if method == "MCX":
+    data_to_load = 'Diffuse_reflectance'
+else:
+    data_to_load = 'DR_at_fiber_detector'
+
+
 # Load simulation of phantom measurements
 # Load phantom
-path = main_path + "simulations/Redbird/"
-data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
-dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
+path = main_path + "simulations/"+method
+data_phantom = scipy.io.loadmat(path+'/Phantom_Data_'+str(wavelength)+'.mat')
+dr_phantom = np.squeeze(data_phantom[data_to_load])
+
+#Get mean value if ndim>1
+if dr_phantom.ndim>1:
+    dr_phantom = dr_phantom.mean(axis=1)
 
 
 
-ft = 18
-ft_label = 18
+# ft = 17
+# ft_label = 17
+ft = 15
+ft_label = 15
 
 plt.rcParams.update({'font.size': ft})
 
@@ -1149,7 +1184,7 @@ for id_mel in range(f_melanosome.shape[0]):
 
         for j,v_p in enumerate(HbT_placenta_array):
 
-            data = scipy.io.loadmat(path+'data_article_'+str(wavelength) +
+            data = scipy.io.loadmat(path+'/data_article_'+str(wavelength) +
             '/out_St_muscle_0.6_St_placenta_0.8' +
             '_Thick_skin_' +str(skin_thickness_subject_mm[i]) +
             '_Thick_adipose_' +str(adipose_thickness_subject_mm[i]) +
@@ -1159,7 +1194,7 @@ for id_mel in range(f_melanosome.shape[0]):
             '_HbT_placenta_umol_'+str(v_p) +'.mat')
 
 
-            val = np.squeeze(data['DR_at_fiber_detector'])/Coeff
+            val = np.squeeze(data[data_to_load])/Coeff
 
 
             for d in range(SD_separation_cm.shape[0]):
@@ -1177,7 +1212,18 @@ for id_mel in range(f_melanosome.shape[0]):
 
         for x_id,xval in enumerate(x):
             for y_id,yval in enumerate(y):
-                ax1.text(xval-0.15,yval,str(int(10000*Detection_probability[y_id,x_id])/100),color=colors[i],fontsize=ft)
+
+                if Detection_probability[y_id,x_id]*100<40:
+                    colors = 'w'
+                else:
+                    colors = 'k'
+                if Detection_probability[y_id,x_id]*100>95:
+                    txt_cell = "*"
+                else:
+                    txt_cell = ""
+                ax1.text(xval-0.15,yval,str(int(10000*Detection_probability[y_id,x_id])/100)+txt_cell,color=colors,fontsize=ft)
+
+
 
         cb = fig1.colorbar(im, ax=ax1)
         cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
@@ -1192,20 +1238,36 @@ plt.show()
 ## Plot detection proba, placenta sensitivity for all subjects
 
 
-
 wavelength = 780
+
+# method = "MCX"
+method = "Redbird"
+
+if method == "MCX":
+    data_to_load = 'Diffuse_reflectance'
+else:
+    data_to_load = 'DR_at_fiber_detector'
+
+
 # Load simulation of phantom measurements
 # Load phantom
-path = main_path + "simulations/Redbird/"
+path = main_path + "simulations/"+method+"/"
 data_phantom = scipy.io.loadmat(path+'Phantom_Data_'+str(wavelength)+'.mat')
-dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
+dr_phantom = np.squeeze(data_phantom[data_to_load])
+
+#Get mean value if ndim>1
+if dr_phantom.ndim>1:
+    dr_phantom = dr_phantom.mean(axis=1)
+
+
 SD_separation_cm = np.array([3, 4, 5])
 
 
 
-
-ft = 23
-ft_legend = 20
+# ft = 23
+# ft_legend = 20
+ft = 18
+ft_legend = 15
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 plt.rcParams.update({'font.size': ft})
@@ -1220,7 +1282,7 @@ patches = []
 
 
 data = scipy.io.loadmat(path+'Data_subjects_'+str(wavelength) + '.mat')
-Diffuse_reflectance = data['DR_at_fiber_detector']
+Diffuse_reflectance = data[data_to_load]
 S_placenta = data['Sensitivity_indexes'][:,-1,:]
 S_placenta_m = []
 S_placenta_m.append(S_placenta[0,:])
@@ -1353,18 +1415,26 @@ dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
 
 
 lw = 5
-ft = 23
-ft_legend = 20
+# ft = 23
+# ft_legend = 20
+
+ft = 18
+ft_legend = 12
 
 plt.close('all')
 fig = plt.figure(tight_layout=True)
-
 gs = gridspec.GridSpec(1, 2)
 ax1 = fig.add_subplot(gs[0,0])
 ax3 = fig.add_subplot(gs[0,1])
 
-# ax_simu = fig.add_subplot(gs[1,0])
-# ax_mes = fig.add_subplot(gs[1,1])
+fig2 = plt.figure(tight_layout=True)
+gs2 = gridspec.GridSpec(1, 3)
+ax12 = fig2.add_subplot(gs2[0,0])
+ax22 = fig2.add_subplot(gs2[0,1])
+ax32 = fig2.add_subplot(gs2[0,2])
+
+
+
 
 id = 0
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -1377,7 +1447,8 @@ SNR = []
 mup_min_vec = []
 mes_vec = []
 simu_vec = []
-
+mean_vec = []
+std_vec = []
 
 
 
@@ -1388,12 +1459,16 @@ for IT in np.array([1,10]):
     idx_IT = np.where(integration_time_s==IT)[0][0]
     #Plot mu_p_phantom
     mup_min, sigma, binned_signal = get_minimum_sensitivity_threshold_normalization(1,Intensity_measured[idx_IT],dr_phantom)
-
+    binned_signal = process_Binning(Intensity_measured[idx_IT],1)
     mup_min_vec.append(mup_min)
-
+    mean_vec.append(binned_signal.mean(axis=1))
+    std_vec.append(binned_signal.std(axis=1))
 
     mup_min, sigma, binned_signal = get_minimum_sensitivity_threshold_normalization(nb_binning,Intensity_measured[idx_IT],dr_phantom)
+    binned_signal = process_Binning(Intensity_measured[idx_IT],10)
     mup_min_vec.append(mup_min)
+    mean_vec.append(binned_signal.mean(axis=1))
+    std_vec.append(binned_signal.std(axis=1))
 
 
     SNR.append(Intensity_measured[idx_IT].mean(axis=1)/Intensity_measured[idx_IT].std(axis=1))
@@ -1413,6 +1488,8 @@ for IT in np.array([1,10]):
 SNR = np.asarray(SNR).T
 mup_min_vec = np.asarray(mup_min_vec).T
 mes_vec = np.asarray(mes_vec).T
+mean_vec = np.asarray(mean_vec).T
+std_vec = np.asarray(std_vec).T
 
 #Bar plot
 width = 0.2
@@ -1425,12 +1502,9 @@ for i in range(SNR.shape[1]):
     rects = ax1.bar(xbar + offset, mup_min_vec[:,i], width, label=label[i])
     rects = ax3.bar(xbar + offset, SNR[:,i], width, label=label[i])
 
-    # rects = ax1.bar(xbar + offset, mes_vec[:,i], width, label=label[i])
-
-
-
-    # ax_mes.plot(SD_separations_mm,mes_vec[:,i], label=label[i])
-
+    rects = ax12.bar(xbar + offset, mean_vec[:,i], width, label=label[i])
+    rects = ax22.bar(xbar + offset, std_vec[:,i], width, label=label[i])
+    rects = ax32.bar(xbar + offset, SNR[:,i], width, label=label[i])
 
 
 ax1.set_title("Minimum detectable diffuse reflectance of Mini CYRIL device",fontsize=ft)
@@ -1449,13 +1523,34 @@ ax3.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","4
 ax3.grid()
 ax3.tick_params(axis='both', which='major', labelsize=ft)
 
-# ax_mes.set_yscale('log')
-# ax_mes.set_xlabel("Source detector separation (mm)",fontsize=ft)
-# ax_mes.set_ylabel("Source detector separation (mm)",fontsize=ft)
-#
-#
-# ax_simu.set_yscale('log')
-# ax_simu.set_xlabel("Source detector separation (mm)",fontsize=ft)
+plt.show()
+
+
+
+
+ax12.set_title("Mean values of Mini-CYRIL signal",fontsize=ft)
+ax12.legend(loc="best",fontsize=ft_legend)
+ax12.set_xlabel("Source detector separation (mm)",fontsize=ft)
+ax12.set_ylabel("$Intensity$ (a. u.)",fontsize=ft)
+ax12.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
+ax12.tick_params(axis='both', which='major', labelsize=ft)
+ax12.grid()
+
+ax22.set_title("Standard deviation values of Mini-CYRIL signal",fontsize=ft)
+ax22.legend(loc="best",fontsize=ft_legend)
+ax22.set_xlabel("Source detector separation (mm)",fontsize=ft)
+ax22.set_ylabel("$Intensity$ (a. u.)",fontsize=ft)
+ax22.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
+ax22.grid()
+ax22.tick_params(axis='both', which='major', labelsize=ft)
+
+ax32.set_title("SNR of Mini CYRIL device",fontsize=ft)
+ax32.legend(loc="best",fontsize=ft_legend)
+ax32.set_xlabel("Source detector separation (mm)",fontsize=ft)
+ax32.set_ylabel("SNR",fontsize=ft)
+ax32.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
+ax32.grid()
+ax32.tick_params(axis='both', which='major', labelsize=ft)
 
 plt.show()
 
