@@ -186,7 +186,7 @@ for i_nb_noise=1:nb_noise
 	[fluence,output_det]=mcxlab(cfg);
 	  
 	% Detector pos
-	for i=1:length(det_pos)
+	for i=1:size(det_pos,1)
 	    %Diffuse reflectance
 	    Diffuse_reflectance(i,i_nb_noise) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
 	end
