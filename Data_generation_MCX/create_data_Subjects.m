@@ -5,6 +5,10 @@ clear
 close all
 clc
 
+
+run_in_cluster = 1;
+
+
 %Wavelength
 Lambdas = 780;
 
@@ -21,7 +25,7 @@ radius_fiber_det_mm = 2.3;
 %Source detector separation in mm
 detectors_SD_mm = [30 40 50];
 
-run_in_cluster = 1;
+
 
 % Repeat the simulation x times
 repetitions = 1;
@@ -99,20 +103,31 @@ cfg.savedetflag = 'dp'; %Save detector id and partial path length
 cfg.gpuid=1;
 
 
+%Create output directory
+outdir = strcat('data_subjects_',num2str(Lambdas));
+if ~exist(outdir, 'dir')
+    mkdir(outdir)
+end
 
-%Thickness layer
-thickness_layers_mm = thickness_layers_mm_array(subject,:);
 
 
 
-
-%Output
-Sensitivity_indexes = zeros(length(detectors_SD_mm), 4, length(thickness_skin_mm));
-Diffuse_reflectance = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
+% % Init Output
+% Sensitivity_indexes = zeros(length(detectors_SD_mm), 4, length(thickness_skin_mm));
+% Diffuse_reflectance = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
+% DR_at_fiber_detector = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
+% Fluence_at_fiber_detector = zeros(length(detectors_SD_mm), length(thickness_skin_mm));
 
 
 for subject=1:length(thickness_skin_mm)
-    fprintf(1,strcat('Subject',num2str(subject),'\n'));
+
+    % Init output
+    Sensitivity_indexes = zeros(length(detectors_SD_mm), 4);
+    Diffuse_reflectance = zeros(length(detectors_SD_mm));
+    DR_at_fiber_detector = zeros(length(detectors_SD_mm));
+    Fluence_at_fiber_detector = zeros(length(detectors_SD_mm));
+
+
 
     %Thickness layer
     thickness_layers_mm = [thickness_skin_mm(subject) thickness_adipose_mm(subject) thickness_muscle_mm(subject)];
@@ -182,10 +197,16 @@ for subject=1:length(thickness_skin_mm)
     % Detector pos
     for i=1:size(det_pos,1)
         %Diffuse reflectance
-        Diffuse_reflectance(i,subject) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
+        % Diffuse_reflectance(i,subject) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
+        Diffuse_reflectance(i) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
     end
 
-    %Add numbers of detected photons
+    % Calculate diffuse reflectance at fiber detector location using fluence
+    [DR_at_fiber_detector, Fluence_at_fiber_detector] = get_Diffuse_reflectance_from_Fluence_MCX(fluence.data, det_pos, radius_fiber_det_mm, 0.1, optical_prop);
+    % [dr,flu] = get_Diffuse_reflectance_from_Fluence_MCX(fluence.data, det_pos, radius_fiber_det_mm, 0.1, optical_prop);
+    % DR_at_fiber_detector(:,subject) = dr;
+    % Fluence_at_fiber_detector(:,subject) = flu;
+
 
     
     % Compute simulation at detector location
@@ -212,11 +233,15 @@ for subject=1:length(thickness_skin_mm)
             % Find indices of tissue m
             indices = find(slice_tissue == m);
             % Compute sensitivity
-            Sensitivity_indexes(d,m,subject) = sum(Sensitivity_profile(:, :, indices),"all");
+            % Sensitivity_indexes(d,m,subject) = sum(Sensitivity_profile(:, :, indices),"all");
+            Sensitivity_indexes(d,m) = sum(Sensitivity_profile(:, :, indices),"all");
+
         end
     end
+    save(strcat(outdir,'/Data_subjects_MCX_',num2str(Lambdas),'_subject_',num2str(subject),'.mat'),'Sensitivity_indexes', 'Diffuse_reflectance', 'DR_at_fiber_detector', 'Fluence_at_fiber_detector');
+
 end
 
 
-save(strcat('Data_subjects_MCX_',num2str(Lambdas),'.mat'),'Sensitivity_indexes', 'Diffuse_reflectance');
+% save(strcat('Data_subjects_MCX_',num2str(Lambdas),'.mat'),'Sensitivity_indexes', 'Diffuse_reflectance', 'DR_at_fiber_detector', 'Fluence_at_fiber_detector');
 

@@ -114,10 +114,8 @@ cfg.savedetflag = 'dp'; %Save detector id and partial path length
 cfg.gpuid=1;
 
 
-
 %Thickness layer
 thickness_layers_mm = thickness_layers_mm_array(subject,:);
-
 
 %Calculate optical properties for each layers
 for p=1:length(C_HbT_placenta_array)
@@ -195,6 +193,11 @@ for p=1:length(C_HbT_placenta_array)
             %Diffuse reflectance
             Diffuse_reflectance(i) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
         end
+        
+        
+        
+        % Calculate diffuse reflectance at fiber detector location using fluence
+        [DR_at_fiber_detector,Fluence_at_fiber_detector] = get_Diffuse_reflectance_from_Fluence_MCX(fluence.data, det_pos, radius_fiber_det_mm, 0.1, optical_prop);
 
         %Add numbers of detected photons
 
@@ -229,7 +232,7 @@ for p=1:length(C_HbT_placenta_array)
     
         %Save outputs
         output_name = strcat(outdir,'/out_St_muscle_',num2str(SatO2_muscle),'_St_placenta_',num2str(SatO2_placenta),'_Thick_skin_',num2str(thickness_skin_in_mm),'_Thick_adipose_',num2str(thickness_adipose_in_mm),'_Thick_muscle_',num2str(thickness_muscle_in_mm),'f_mel',num2str(f_mel),'_HbT_muscle_umol_',num2str(C_HbT_muscle*1e6),'_HbT_placenta_umol_',num2str(C_HbT_placenta*1e6),'.mat');
-        save(output_name,'Diffuse_reflectance','Sensitivity_indexes');
+        save(output_name,'Diffuse_reflectance','Sensitivity_indexes', 'DR_at_fiber_detector', 'Fluence_at_fiber_detector');
 
                  
     end

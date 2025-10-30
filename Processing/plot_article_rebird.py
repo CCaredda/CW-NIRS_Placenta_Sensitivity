@@ -210,12 +210,12 @@ def get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured,d
 
 
 
-def get_detection_proba(scaled_dr, sigma_p_phantom_detector, mu_p_min_detector):
+def get_detection_proba(scaled_dr, sigma_p_phantom_detector, mu_p_min_detector,size_sample = 1000000):
 
     # Detection probability
     sample = np.random.normal(loc = scaled_dr,
                                 scale = sigma_p_phantom_detector,
-                                size = (1000000))
+                                size = (size_sample))
     # Process T-tests
     t,p = scipy.stats.ttest_1samp(sample,mu_p_min_detector,
                                 alternative='greater')
@@ -569,9 +569,9 @@ plt.show()
 
 
 ## Load and Plot tissue sensitivity data
-wavelength = 890
-# method = "Redbird"
-method = "MCX"
+wavelength = 780
+method = "Redbird"
+# method = "MCX"
 
 
 #Load tissue sensitivity
@@ -580,10 +580,10 @@ HbT_placenta_array = np.array([15,25,35,50])
 SD_separation_cm = np.array([3, 4, 5])
 
 
-# ft = 23
-# ft_label = 23
-ft = 15
-ft_label = 15
+ft = 23
+ft_label = 23
+# ft = 15
+# ft_label = 15
 plt.rcParams.update({'font.size': ft})
 
 skin_thickness_subject_mm = np.array([1, 2, 3])
@@ -594,16 +594,21 @@ dist_to_plancenta_subjects_mm = skin_thickness_subject_mm + adipose_thickness_su
 
 
 all_d = []
+title = "Placenta sensitivity at "+str(wavelength)+" nm"
+
 
 plt.close('all')
 fig1 = plt.figure(tight_layout=True)
-plt.suptitle("Placenta sensitivity at "+str(wavelength)+" nm",fontsize=ft)
+if method == "MCX":
+    title += " (MCX)"
+plt.suptitle(title,fontsize=ft)
 # fig2 = plt.figure()
 
 cmap = cm.plasma
 
 # colors = ['k','w','w','w']
 colors = ['k','k','k','k']
+
 
 for id_mel in range(f_melanosome.shape[0]):
     for i in range(muscle_thickness_subject_mm.shape[0]):
@@ -623,7 +628,6 @@ for id_mel in range(f_melanosome.shape[0]):
 
 
             Placenta_sensitivity_redbird[p,:] = data['Sensitivity_indexes'][:,-1]
-
 
         #shape (fmel,detectors)
 
@@ -1135,10 +1139,10 @@ if dr_phantom.ndim>1:
 
 
 
-# ft = 17
-# ft_label = 17
-ft = 15
-ft_label = 15
+ft = 23
+ft_label = 23
+# ft = 15
+# ft_label = 15
 
 plt.rcParams.update({'font.size': ft})
 
@@ -1155,8 +1159,8 @@ SD_separation_cm = np.array([3, 4, 5])
 colors = ['k','k','k','k']
 
 #Set integration time and binning
-int_time_s = 10
-binning = 10
+int_time_s = 1
+binning = 1
 
 
 
@@ -1167,7 +1171,12 @@ mu_p_min, sigma_p_phantom_detector, Coeff = get_minimum_sensitivity_threshold_no
 
 plt.close('all')
 fig1 = plt.figure(tight_layout=True)
-plt.suptitle("Detection probability at "+str(wavelength)+" nm - Integration time "+str(int_time_s)+" binning "+str(binning),fontsize=ft)
+title = "Detection probability at "+str(wavelength)+" nm - Integration time "+str(int_time_s)+" binning "+str(binning)
+
+if method == "MCX":
+    title +=" (MCX)"
+
+plt.suptitle(title,fontsize=ft)
 
 cmap = cm.plasma
 
@@ -1240,8 +1249,8 @@ plt.show()
 
 wavelength = 780
 
-# method = "MCX"
-method = "Redbird"
+method = "MCX"
+# method = "Redbird"
 
 if method == "MCX":
     data_to_load = 'Diffuse_reflectance'
@@ -1335,8 +1344,12 @@ plt.close('all')
 fig = plt.figure(tight_layout=True)
 gs = gridspec.GridSpec(4, 1, height_ratios=[1, 1, 0.1, 1])
 
+title = "Placenta sensitivity"
+if method == "MCX":
+    title+= " (MCX)"
+
 ax = fig.add_subplot(gs[0,0])
-ax.set_title("Placenta sensitivity",fontsize = ft)
+ax.set_title(title,fontsize = ft)
 plots = ax.violinplot(np.asarray(S_placenta_m).T*100, showmedians=False, showmeans=True,quantiles=[[0.25,0.75],[0.25,0.75],[0.25,0.75]])
 plots['cmeans'].set_colors(c[id])
 plots['cquantiles'].set_color('r')
@@ -1353,7 +1366,12 @@ ax.set_ylim(0,100)
 
 #Detection probability
 ax = fig.add_subplot(gs[1,0])
-ax.set_title("Detection probability",fontsize = ft)
+
+title = "Detection probability"
+if method == "MCX":
+    title+= " (MCX)"
+
+ax.set_title(title,fontsize = ft)
 plots = ax.violinplot(np.asarray(P_detection_m).T*100, showmedians=False, showmeans=True)#,quantiles=quantiles_vec)
 for pc, color in zip(plots['bodies'], colors):
     pc.set_facecolor(color)
@@ -1382,7 +1400,11 @@ fig.legend(handles=patches,
 
 #Scanning probability
 ax = fig.add_subplot(gs[3,0])
-ax.set_title("Placenta scanning probability",fontsize = ft)
+title = "Placenta scanning probability"
+if method == "MCX":
+    title+= " (MCX)"
+
+ax.set_title(title,fontsize = ft)
 plots = ax.violinplot(np.asarray(P_scanning_m).T*100, showmedians=False, showmeans=True)#,quantiles=quantiles_vec)
 for pc, color in zip(plots['bodies'], colors):
     pc.set_facecolor(color)
@@ -2004,14 +2026,17 @@ SD_separation_cm_array = np.array([3, 4, 5])
 SD_separation_id = 0
 
 
-data_MCX = scipy.io.loadmat(path+"MCX.mat")
-MCX_DR = data_MCX['Diffuse_reflectance']
+data_MCX = scipy.io.loadmat(path+"MCX_sensitivity_profile.mat")
 MCX_Sensitivity_profile = data_MCX['Sensitivity_profile']
+
+data_MCX = scipy.io.loadmat(path+"MCX_noisy.mat")
+MCX_DR = data_MCX['Diffuse_reflectance']
 MCX_Sensitivity_index = data_MCX['Sensitivity_indexes']
 
 
+
 data_Redbird = scipy.io.loadmat(path+"Redbird.mat")
-Redbird_DR = data_Redbird['DR_at_fiber_detector']
+Redbird_DR = np.squeeze(data_Redbird['DR_at_fiber_detector'])
 Redbird_Sensitivity_profile = data_Redbird['sensitivity_profile']
 Redbird_Sensitivity_index = data_Redbird['Sensitivity_indexes']
 
@@ -2129,4 +2154,55 @@ p.invert_yaxis()
 plt.xlabel("Tissue width (mm)",fontsize=ft)
 plt.ylabel("Tissue depth (mm)",fontsize=ft)
 plt.legend(loc="best",fontsize=ft)
+plt.show()
+
+
+
+# Load simulation of phantom measurements
+data = scipy.io.loadmat(main_path + 'simulations/MCX/Phantom_Data_780.mat')
+MCX_dr_phantom = np.squeeze(data['Diffuse_reflectance'])
+MCX_dr_phantom = MCX_dr_phantom.mean(axis=1)
+
+data = scipy.io.loadmat(main_path + 'simulations/Redbird/Phantom_Data_780.mat')
+Redbird_dr_phantom = np.squeeze(data['DR_at_fiber_detector'])
+
+#
+#
+# #Set integration time and binning
+# int_time_s = 1
+# binning = 1
+#
+#
+# #Get mup min
+# MCX_mu_p_min, MCX_sigma_p_phantom_detector, MCX_Coeff = get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured[np.where(int_time_s == integration_time_s)[0][0]],MCX_dr_phantom)
+#
+# Redbird_mu_p_min, Redbird_sigma_p_phantom_detector, Redbird_Coeff = get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured[np.where(int_time_s == integration_time_s)[0][0]],Redbird_dr_phantom)
+#
+# # Calculate detection proba
+# MCX_Detection_probability = np.zeros(MCX_DR.shape)
+# for d in range(MCX_DR.shape[0]):
+#     for s in range (MCX_DR.shape[1]):
+#         val = MCX_DR[d,s]/MCX_Coeff[d]
+#         MCX_Detection_probability[d,s] = get_detection_proba(val, MCX_sigma_p_phantom_detector[d], MCX_mu_p_min[d])
+#
+# Redbird_Detection_probability = np.zeros(Redbird_DR.shape)
+# for d in range(Redbird_DR.shape[0]):
+#     val = Redbird_DR[d]/Redbird_Coeff[d]
+#     Redbird_Detection_probability[d] = get_detection_proba(val, Redbird_sigma_p_phantom_detector[d], Redbird_mu_p_min[d])
+#
+#
+# plt.figure()
+# # plt.plot(MCX_Detection_probability[0,:])
+# plt.plot(MCX_DR[0,:])
+# plt.plot([0,99],[MCX_dr_phantom[0],MCX_dr_phantom[0]],'k')
+# plt.show()
+
+plt.figure()
+plt.subplot(121)
+plt.plot(MCX_dr_phantom)
+plt.yscale('log')
+plt.subplot(122)
+plt.plot(Redbird_dr_phantom)
+plt.yscale('log')
+
 plt.show()

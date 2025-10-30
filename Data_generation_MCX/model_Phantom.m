@@ -3,8 +3,8 @@
 clear
 close all
 
-run_in_cluster = 0;
-Nb_measure = 1000;
+run_in_cluster = 1;
+Nb_measure = 100;
 
 % Repeat the simulation x times
 repetitions = 1;
@@ -58,7 +58,15 @@ cfg.autopilot = 1;
 % Voxel size in mm
 cfg.unitinmm = model_resolution_in_mm;
 
+
+%Model fiber detector
+radius_fiber_det_mm = 2.3;
+
+%Source detector separation in mm
+detectors_SD_mm = [30 40 50];
+
 % Add path
+addpath('../functions');
 if run_in_cluster == 1
     addpath('/pbs/home/c/ccaredda/private/mcx/utils');
     addpath('/pbs/home/c/ccaredda/private/mcxlab');
@@ -77,15 +85,20 @@ cfg.issrcfrom0=1;
 %Volume square size
 volume_square_size = 200;
 
-% Source type (values in accordance with VOlume size, se below)
-cfg.srctype='pencil';
-src_pos = [floor(volume_square_size/2 -1) floor((volume_square_size - 80/model_resolution_in_mm)/2 -1) 0];
-cfg.srcdir=[0 0 1];
+%Volume ize in mm
+xdim_mm = volume_square_size;
+ydim_mm = volume_square_size;
+zdim_mm = volume_square_size;
 
-%Define multiple detectors  (values in accordance with VOlume size, se below)
-det_pos = zeros(8,4);
-for i=1:8
-    det_pos(i,:) = [src_pos(1) src_pos(2)+i*floor(10/model_resolution_in_mm) 1 0.5]; % radius: 0.5 mm
+%Light source
+src_pos = [(xdim_mm/2-1) (ydim_mm - detectors_SD_mm(end))/2-1 0];
+cfg.srcdir=[0 0 1];
+cfg.srctype = 'pencil';
+
+%Detectors
+det_pos = zeros(length(detectors_SD_mm),4);
+for i=1:length(detectors_SD_mm)
+    det_pos(i,:) = [src_pos(1) src_pos(2)+detectors_SD_mm(i) 1 radius_fiber_det_mm];
 end
 cfg.detpos = det_pos;
 
@@ -137,7 +150,10 @@ slice_tissue = squeeze(cfg.vol(floor(volume_square_size/2),floor(volume_square_s
 
                         
 %Init output
-Diffuse_reflectance = zeros(8,Nb_measure);
+Diffuse_reflectance = zeros(length(detectors_SD_mm),Nb_measure);
+DR_at_fiber_detector= zeros(length(detectors_SD_mm),Nb_measure);
+Fluence_at_fiber_detector= zeros(length(detectors_SD_mm),Nb_measure);
+
 
 %Process simulation with light source at the source
 %position
@@ -156,7 +172,14 @@ for n=1:Nb_measure
         %Diffuse reflectance
         Diffuse_reflectance(i,n) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
     end
+
+    % Calculate diffuse reflectance at fiber detector location using fluence
+    [dr,flu] = get_Diffuse_reflectance_from_Fluence_MCX(fluence.data, det_pos, radius_fiber_det_mm, 0.1, optical_prop);
+    DR_at_fiber_detector(i,:) = dr;
+    Fluence_at_fiber_detector(i,:) = flu;
 end
+
+
 
 
                         
@@ -166,6 +189,6 @@ save('out_Phantom.mat','Diffuse_reflectance',...
                         'det_pos','Lambdas','repetitions',...
                         'nphotons','model_resolution_in_mm',...
                         'L1_thickness_mm','L2_thickness_mm',...
-                        'L3_thickness_mm','slice_tissue');
+                        'L3_thickness_mm','slice_tissue','DR_at_fiber_detector','Fluence_at_fiber_detector');
 
                
