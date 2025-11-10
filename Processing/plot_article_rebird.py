@@ -245,6 +245,7 @@ def SRS(Attenuation,SD_separations_in_mm,WAVELENGTHS,ext_coeffs_inv):
     return _StO2
 
 
+
 ## Read data measured by he clinical team
 
 # Extract thickness from segmentation files
@@ -570,8 +571,8 @@ plt.show()
 
 ## Load and Plot tissue sensitivity data
 wavelength = 780
-method = "Redbird"
-# method = "MCX"
+# method = "Redbird"
+method = "MCX"
 
 
 #Load tissue sensitivity
@@ -634,7 +635,7 @@ for id_mel in range(f_melanosome.shape[0]):
         all_d.append(Placenta_sensitivity_redbird)
 
         y = HbT_placenta_array
-        x = SD_separation_cm.copy()
+        x = SD_separation_cm.copy()*10
         T_x,T_y = np.meshgrid(x,y)
 
         ax1 = fig1.add_subplot(3,3,i+1+(3*(id_mel)))
@@ -655,7 +656,7 @@ for id_mel in range(f_melanosome.shape[0]):
         cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
         ax1.set_xticks(x)  # Set x ticks to vector values
         ax1.set_yticks(y)  # Set y ticks to vector values
-        ax1.set_xlabel("Source detector separation (cm)",fontsize=ft)
+        ax1.set_xlabel("Source detector separation (mm)",fontsize=ft)
         ax1.set_ylabel("Placenta $C_{HbT}$ ($\mu$M)",fontsize=ft)
 
 plt.show()
@@ -680,13 +681,17 @@ dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
 path_data = main_path+"simulations/Redbird/data_article_subcutaneous/"
 SD_separation_cm = np.array([3, 4, 5])
 
-# ft = 18
-# ft_label = 10
-# ft_text = 10
-
-ft = 20
+ft = 16
 ft_label = 12
 ft_text = 12
+
+# ft = 23
+# ft_label = 23
+# ft_text = 23
+
+# ft = 20
+# ft_label = 12
+# ft_text = 12
 
 
 plt.rcParams.update({'font.size': ft_label})
@@ -808,7 +813,7 @@ plt.suptitle("Effect of the skin thickness on detection probability",fontsize=ft
 
 #Plot 1
 y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(1,2,1)
 ax1.set_title("A - Detection probability at "+str(wavelength)+" nm for a fixed skin thickness",fontsize=ft)
@@ -831,16 +836,22 @@ cb.set_label("Detection probability (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
+
+
+
+
+
+
 
 
 #Plot 2
 y = np.arange(dist_to_plancenta_subjects_mm2.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(1,2,2)
-ax1.set_title("A - Detection probability at "+str(wavelength)+" nm for varying skin thickness",fontsize=ft)
+ax1.set_title("B - Detection probability at "+str(wavelength)+" nm for varying skin thickness",fontsize=ft)
 im = ax1.pcolor(T_x,T_y,Detection_proba2*100, cmap=cmap, vmin=0, vmax=100)
 
 for x_id,xval in enumerate(x):
@@ -860,7 +871,7 @@ cb.set_label("Detection probability (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label2)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 plt.show()
 
@@ -890,7 +901,7 @@ plt.suptitle("Effect of the skin thickness on tissue sensitivity",fontsize=ft)
 #Skin
 #Plot 1
 y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,1)
 ax1.set_title("A - Skin sensitivity",fontsize=ft)
@@ -909,13 +920,13 @@ cb.set_label("Skin sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
 #Plot 2
 y = np.arange(Placenta_sensitivity_redbird2.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,2)
 ax1.set_title("B - Skin sensitivity",fontsize=ft)
@@ -934,7 +945,7 @@ cb.set_label("Skin sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label2)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
@@ -946,7 +957,7 @@ ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
 #Adipose
 #Plot 1
 y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,3)
 ax1.set_title("C - Adipose sensitivity",fontsize=ft)
@@ -965,13 +976,13 @@ cb.set_label("Adipose tissue sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
 #Plot 2
 y = np.arange(Placenta_sensitivity_redbird2.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,4)
 ax1.set_title("D - Adipose sensitivity",fontsize=ft)
@@ -990,7 +1001,7 @@ cb.set_label("Adispose tissue sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label2)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
@@ -1004,7 +1015,7 @@ ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
 #Muscle
 #Plot 1
 y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,5)
 ax1.set_title("E - Muscle sensitivity",fontsize=ft)
@@ -1023,13 +1034,13 @@ cb.set_label("Muscle sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
 #Plot 2
 y = np.arange(Placenta_sensitivity_redbird2.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,6)
 ax1.set_title("F - Muscle sensitivity",fontsize=ft)
@@ -1048,7 +1059,7 @@ cb.set_label("Muscle sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label2)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
@@ -1065,7 +1076,7 @@ ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
 #Placenta
 #Plot 1
 y = np.arange(dist_to_plancenta_subjects_mm.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,7)
 ax1.set_title("G - Placenta sensitivity",fontsize=ft)
@@ -1084,13 +1095,13 @@ cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 
 
 #Plot 2
 y = np.arange(Placenta_sensitivity_redbird2.shape[0])
-x = SD_separation_cm.copy()
+x = SD_separation_cm.copy()*10
 T_x,T_y = np.meshgrid(x,y)
 ax1 = fig1.add_subplot(2,4,8)
 ax1.set_title("H - Placenta sensitivity",fontsize=ft)
@@ -1109,7 +1120,7 @@ cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
 ax1.set_xticks(x)  # Set x ticks to vector values
 ax1.set_yticks(y)  # Set y ticks to vector values
 ax1.set_yticklabels(thickness_label2)
-ax1.set_xlabel("Source detector separation (cm)",fontsize=ft_label)
+ax1.set_xlabel("Source detector separation (mm)",fontsize=ft_label)
 # ax1.set_ylabel("Placenta depth (mm)",fontsize=ft)
 plt.show()
 
@@ -1121,10 +1132,12 @@ wavelength = 780
 # method = "Redbird"
 method = "MCX"
 
-if method == "MCX":
-    data_to_load = 'Diffuse_reflectance'
-else:
-    data_to_load = 'DR_at_fiber_detector'
+data_to_load = 'DR_at_fiber_detector'
+
+# if method == "MCX":
+#     data_to_load = 'Diffuse_reflectance'
+# else:
+#     data_to_load = 'DR_at_fiber_detector'
 
 
 # Load simulation of phantom measurements
@@ -1133,6 +1146,7 @@ path = main_path + "simulations/"+method
 data_phantom = scipy.io.loadmat(path+'/Phantom_Data_'+str(wavelength)+'.mat')
 dr_phantom = np.squeeze(data_phantom[data_to_load])
 
+print(dr_phantom.shape)
 #Get mean value if ndim>1
 if dr_phantom.ndim>1:
     dr_phantom = dr_phantom.mean(axis=1)
@@ -1160,7 +1174,7 @@ colors = ['k','k','k','k']
 
 #Set integration time and binning
 int_time_s = 1
-binning = 1
+binning = 10
 
 
 
@@ -1210,9 +1224,8 @@ for id_mel in range(f_melanosome.shape[0]):
                 Detection_probability[j,d] = get_detection_proba(val[d], sigma_p_phantom_detector[d], mu_p_min[d])
 
 
-
         y = HbT_placenta_array
-        x = SD_separation_cm.copy()
+        x = SD_separation_cm.copy()*10
         T_x,T_y = np.meshgrid(x,y)
 
         ax1 = fig1.add_subplot(3,3,i+1+(3*(id_mel)))
@@ -1238,7 +1251,7 @@ for id_mel in range(f_melanosome.shape[0]):
         cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
         ax1.set_xticks(x)  # Set x ticks to vector values
         ax1.set_yticks(y)  # Set y ticks to vector values
-        ax1.set_xlabel("Source detector separation (cm)",fontsize=ft)
+        ax1.set_xlabel("Source detector separation (mm)",fontsize=ft)
         ax1.set_ylabel("Placenta $C_{HbT}$ ($\mu$M)",fontsize=ft)
 
 plt.show()
@@ -1252,11 +1265,8 @@ wavelength = 780
 method = "MCX"
 # method = "Redbird"
 
-if method == "MCX":
-    data_to_load = 'Diffuse_reflectance'
-else:
-    data_to_load = 'DR_at_fiber_detector'
 
+data_to_load = 'DR_at_fiber_detector'
 
 # Load simulation of phantom measurements
 # Load phantom
@@ -1270,13 +1280,13 @@ if dr_phantom.ndim>1:
 
 
 SD_separation_cm = np.array([3, 4, 5])
+SD_labels = np.array(["30","40","50"])
 
 
-
-# ft = 23
-# ft_legend = 20
-ft = 18
-ft_legend = 15
+ft = 23
+ft_legend = 20
+# ft = 16
+# ft_legend = 15
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 plt.rcParams.update({'font.size': ft})
@@ -1354,9 +1364,9 @@ plots = ax.violinplot(np.asarray(S_placenta_m).T*100, showmedians=False, showmea
 plots['cmeans'].set_colors(c[id])
 plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([1,2,3]))
-ax.set_xticklabels(np.array(["3","4","5"]),fontsize=ft)
+ax.set_xticklabels(SD_labels,fontsize=ft)
 ax.set_ylabel("Probability (%)",fontsize = ft)
-ax.set_xlabel("Source-detector separation (cm)",fontsize = ft)
+ax.set_xlabel("Source-detector separation (mm)",fontsize = ft)
 
 # for i in range(len(labels)-1):
 #     ax.axvline(SD_cm.shape[0]+0.5+SD_cm.shape[0]*i)
@@ -1378,9 +1388,9 @@ for pc, color in zip(plots['bodies'], colors):
 plots['cmeans'].set_colors(c[id])
 # plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([3.5,9.5,15.5]))
-ax.set_xticklabels(np.array(["3","4","5"]),fontsize=ft)
+ax.set_xticklabels(SD_labels,fontsize=ft)
 ax.set_ylabel("Probability (%)",fontsize = ft)
-ax.set_xlabel("Source-detector separation (cm)",fontsize = ft)
+ax.set_xlabel("Source-detector separation (mm)",fontsize = ft)
 ax.axvline(6.5,0,100,color='k',linewidth=3)
 ax.axvline(12.5,0,100,color='k',linewidth=3)
 ax.grid()
@@ -1411,9 +1421,9 @@ for pc, color in zip(plots['bodies'], colors):
 plots['cmeans'].set_colors(c[id])
 # plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([3.5,9.5,15.5]))
-ax.set_xticklabels(np.array(["3","4","5"]),fontsize=ft)
+ax.set_xticklabels(SD_labels,fontsize=ft)
 ax.set_ylabel("Probability (%)",fontsize = ft)
-ax.set_xlabel("Source-detector separation (cm)",fontsize = ft)
+ax.set_xlabel("Source-detector separation (mm)",fontsize = ft)
 ax.axvline(6.5,0,100,color='k',linewidth=3)
 ax.axvline(12.5,0,100,color='k',linewidth=3)
 ax.grid()
@@ -1425,6 +1435,25 @@ ax.set_ylim(0,100)
         # id += 1
 plt.show()
 
+
+print("Mean placental sensi "+method+": ",np.mean(np.asarray(S_placenta_m).T*100))
+print("Std placental sensi "+method+": ",np.std(np.asarray(S_placenta_m).T*100))
+
+
+print("Mean detection proba "+method+": ",np.mean(np.asarray(P_detection_m).T*100))
+print("Std detection proba "+method+": ",np.std(np.asarray(P_detection_m).T*100))
+
+print("Mean scanning proba "+method+": ",np.mean(np.asarray(P_scanning_m).T*100))
+print("Std scanning proba "+method+": ",np.std(np.asarray(P_scanning_m).T*100))
+
+
+# P_sensi_redbird = np.asarray(S_placenta_m).T*100
+# P_detect_redbird = np.asarray(P_detection_m).T*100
+# P_scanning_redbird = np.asarray(P_scanning_m).T*100
+
+P_sensi_mcx = np.asarray(S_placenta_m).T*100
+P_detect_mcx = np.asarray(P_detection_m).T*100
+P_scanning_mcx = np.asarray(P_scanning_m).T*100
 ## Get minimum sensitivity threshold (normalize diffuse reflectance) - Mini CYRIL
 
 wavelength = 780
@@ -1437,11 +1466,11 @@ dr_phantom = np.squeeze(data_phantom['DR_at_fiber_detector'])
 
 
 lw = 5
-# ft = 23
-# ft_legend = 20
+ft = 23
+ft_legend = 20
 
-ft = 18
-ft_legend = 12
+# ft = 18
+# ft_legend = 12
 
 plt.close('all')
 fig = plt.figure(tight_layout=True)
@@ -1556,6 +1585,7 @@ ax12.set_xlabel("Source detector separation (mm)",fontsize=ft)
 ax12.set_ylabel("$Intensity$ (a. u.)",fontsize=ft)
 ax12.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
 ax12.tick_params(axis='both', which='major', labelsize=ft)
+ax12.set_yscale('log')
 ax12.grid()
 
 ax22.set_title("Standard deviation values of Mini-CYRIL signal",fontsize=ft)
@@ -1564,6 +1594,7 @@ ax22.set_xlabel("Source detector separation (mm)",fontsize=ft)
 ax22.set_ylabel("$Intensity$ (a. u.)",fontsize=ft)
 ax22.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","40","50"]),fontsize=ft)
 ax22.grid()
+ax22.set_yscale('log')
 ax22.tick_params(axis='both', which='major', labelsize=ft)
 
 ax32.set_title("SNR of Mini CYRIL device",fontsize=ft)
@@ -1803,15 +1834,15 @@ for S in range(SatO2_homo.shape[0]):
     data = scipy.io.loadmat(main_path + "simulations/Redbird/StO2_semi_ininite/St_" +str(SatO2_homo[S])+".mat")
 
     #Load intensity
-    I = np.squeeze(data['DR_at_fiber_detector'])
+    I = np.squeeze(data['Diffuse_reflectance'])
 
     #Compute Attenuation
     Attenuation = np.log10(1/I)
 
 
-    #Calculate detection proba at 780 nm for detector at 3 cm
-    detection_proba_homo[0,S] = get_detection_proba(I[id_comb_34_homo[0],0]/Coeff[id_comb_34_homo[0]], sigma_p_phantom_detector[id_comb_34_homo[0]], mu_p_min[id_comb_34_homo[0]])
-    detection_proba_homo[1,S] = get_detection_proba(I[id_comb_34_homo[1],0]/Coeff[id_comb_34_homo[1]], sigma_p_phantom_detector[id_comb_34_homo[1]], mu_p_min[id_comb_34_homo[1]])
+    # #Calculate detection proba at 780 nm for detector at 3 cm
+    # detection_proba_homo[0,S] = get_detection_proba(I[id_comb_34_homo[0],0]/Coeff[id_comb_34_homo[0]], sigma_p_phantom_detector[id_comb_34_homo[0]], mu_p_min[id_comb_34_homo[0]])
+    # detection_proba_homo[1,S] = get_detection_proba(I[id_comb_34_homo[1],0]/Coeff[id_comb_34_homo[1]], sigma_p_phantom_detector[id_comb_34_homo[1]], mu_p_min[id_comb_34_homo[1]])
 
     #Process SRS
     _StO2_SD_34 = SRS(Attenuation[id_comb_34_homo,:], np.array([30,40]),
@@ -1825,7 +1856,7 @@ for S in range(SatO2_homo.shape[0]):
 
 
 #Set to nan if detection proba is below 95%
-SatO2_array_homo[detection_proba_homo<0.99] = np.nan
+# SatO2_array_homo[detection_proba_homo<0.99] = np.nan
 
 
 # plot
@@ -1843,9 +1874,9 @@ SatO2_array_display = SatO2_array.copy()
 
 plt.close('all')
 fig1, axes = plt.subplots(4, 1, constrained_layout=True)
-SD = (SD_separations_in_mm[id_comb_34]/10).astype(int)
+SD = (SD_separations_in_mm[id_comb_34]).astype(int)
 
-SD_sep = "(SD separation: "+str(SD[0])+"-"+str(SD[1])+" cm)"
+SD_sep = "(SD separation: "+str(SD[0])+"-"+str(SD[1])+" mm)"
 
 
 # ----- Display SatO2 for semi-infinite slab -----
@@ -2013,6 +2044,107 @@ plt.grid()
 
 plt.show()
 
+## Plot sensitivity map phantom
+
+path = main_path + "simulations/MCX/"
+
+
+thickness_layers_mm = np.array([4, 2, 3])
+
+SD_separation_cm_array = np.array([3, 4, 5])
+SD_separation_id = 2
+SD_separation_label  = np.array(["30","40","50"])
+
+data_MCX = scipy.io.loadmat(path+"out_Phantom.mat")
+DR = data_MCX['DR_at_fiber_detector']
+# MCX_Sensitivity_profile = data_MCX['Sensitivity_profile_vec']
+# det_pos = np.squeeze(data_MCX['det_pos'])
+# det_pos = det_pos[SD_separation_id].astype(int)
+# src_pos = np.squeeze(data_MCX['src_pos']).astype(int)
+#
+#
+#
+#
+# depth = 50
+# S = MCX_Sensitivity_profile[:,:,:,SD_separation_id]
+# S = S/S.max()
+# map_MCX = S[det_pos[0],src_pos[1]-10:det_pos[1]+10,0:depth].copy()
+# map_MCX = 100*map_MCX.T
+# map_MCX= map_MCX[1:,:] # remove first row for redbird compa (first row is air)
+#
+# # levels = [1e-5,1e-4,1e-3,1e-2,1e-1,1,10,100]
+# levels = [1e-3,5e-3,1e-2,5e-2,1e-1,5e-1,1,5,10,50,100]
+#
+#
+# reso = 1
+# x = np.arange(0,map_MCX.shape[1]*reso,reso)
+# y = np.arange(0,map_MCX.shape[0]*reso,reso)
+# interp_map_MCX = interpolate.RegularGridInterpolator((y, x),map_MCX,bounds_error=False, fill_value=None)
+#
+# x_interp = np.linspace(x[0],x[-1],x.shape[0]*4)
+# y_interp = np.linspace(y[0],y[-1],y.shape[0]*4)
+#
+#
+# map_interp_MCX = np.zeros((y_interp.shape[0],x_interp.shape[0]))
+#
+# for i in range(x_interp.shape[0]):
+#     for j in range(y_interp.shape[0]):
+#         map_interp_MCX[j,i] = interp_map_MCX((y_interp[j], x_interp[i]))
+#
+#
+# levels_contours = [1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1,30,50,100]
+#
+#
+# plt.close('all')
+# plt.figure()
+# p=plt.subplot(121)
+# plt.title("Phantom sensitivity profile",fontsize=ft)
+# im = plt.contourf(x_interp, y_interp,map_interp_MCX,levels = levels_contours, locator=ticker.LogLocator(),cmap='plasma')
+#
+# plt.plot(x_interp,thickness_layers_mm[0]*np.ones(x_interp.shape),'k',linestyle=':',linewidth = lw)
+# plt.plot(x_interp,thickness_layers_mm[1]*np.ones(x_interp.shape),'k',linestyle=':',linewidth = lw)
+# plt.plot(x_interp,thickness_layers_mm[2]*np.ones(x_interp.shape),'k',linestyle=':',linewidth = lw)
+#
+# plt.plot(10,0,'ko',markersize=12,label="Source")
+# plt.plot(10+SD_separation_cm_array[SD_separation_id]*10,0,'go',markersize=12,label="Detector")
+# #
+# # plt.text(1,thickness_layers_mm[0]-0.2,"Skin",fontsize=ft_txt)
+# # plt.text(1,thickness_layers_mm[1]-0.2,"Adipose tissue",fontsize=ft_txt)
+# # plt.text(1,thickness_layers_mm[2]-0.2,"Muscle",fontsize=ft_txt)
+# # plt.text(1,thickness_layers_mm[2]+0.5,"Placenta",fontsize=ft_txt)
+#
+# c = plt.colorbar(im)
+# c.set_label("Sensitivity probability (%)",fontsize=ft)
+# p.invert_yaxis()
+# # plt.xticks(x)
+# # plt.yticks(y)
+# plt.xlabel("Phantom width (mm)",fontsize=ft)
+# plt.ylabel("Phantom depth (mm)",fontsize=ft)
+# plt.legend(loc="best",fontsize=ft)
+
+intensity = np.array([mean_vec[0,-1], mean_vec[1,-1], mean_vec[2,-1]])
+
+plt.close('all')
+plt.figure()
+plt.subplot(121)
+plt.plot(np.arange(SD_separation_cm_array.shape[0]),intensity,linewidth=3)
+plt.grid()
+plt.title("Mean intensity measured versus source-detector separation (it=10 s, binning 10)",fontsize=ft)
+plt.xlabel("Source-detector separation (mm)",fontsize=ft)
+plt.ylabel("Mean intensitiy ",fontsize=ft)
+plt.yscale('log')
+plt.xticks(np.arange(SD_separation_cm_array.shape[0]),SD_separation_label)
+
+
+plt.subplot(122)
+plt.plot(np.arange(SD_separation_cm_array.shape[0]),DR,linewidth=3)
+plt.grid()
+plt.title("Simulated diffuse reflectance versus source-detector separation",fontsize=ft)
+plt.xlabel("Source-detector separation (mm)",fontsize=ft)
+plt.ylabel("Diffuse reflectance (a. u.)",fontsize=ft)
+plt.yscale('log')
+plt.xticks(np.arange(SD_separation_cm_array.shape[0]),SD_separation_label)
+plt.show()
 
 ## Compare MCX and Redbird values
 
@@ -2205,4 +2337,93 @@ plt.subplot(122)
 plt.plot(Redbird_dr_phantom)
 plt.yscale('log')
 
+plt.show()
+
+
+
+
+
+## Influence nb of samples on detection proba
+
+
+
+ft = 18
+plt.rcParams.update({'font.size': ft})
+
+
+path = main_path + "simulations/Redbird"
+
+wavelength = 780
+thickness_layers_mm = np.array([2, 4, 10])
+f_melanosome = 0.305
+CHbT_placenta = 35
+
+SD_separation_cm_array = np.array([3, 4, 5])
+
+
+
+data_Redbird = scipy.io.loadmat(path+'/data_article_'+str(wavelength) +
+'/out_St_muscle_0.6_St_placenta_0.8' +
+'_Thick_skin_' +str(thickness_layers_mm[0]) +
+'_Thick_adipose_' +str(thickness_layers_mm[1]) +
+'_Thick_muscle_' + str(thickness_layers_mm[2]) +
+'f_mel' +str(f_melanosome) +
+'_HbT_muscle_umol_25'+
+'_HbT_placenta_umol_'+str(CHbT_placenta) +'.mat')
+Redbird_DR = np.squeeze(data_Redbird['DR_at_fiber_detector'])
+
+
+
+# Load simulation of phantom measurements
+data = scipy.io.loadmat(main_path + 'simulations/Redbird/Phantom_Data_780.mat')
+Redbird_dr_phantom = np.squeeze(data['DR_at_fiber_detector'])
+
+
+#Set integration time and binning
+int_time_s = 10
+binning = 10
+
+
+#Get mup min
+Redbird_mu_p_min, Redbird_sigma_p_phantom_detector, Redbird_Coeff = get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured[np.where(int_time_s == integration_time_s)[0][0]],Redbird_dr_phantom)
+
+# Calculate detection proba vs nb of sample used in the T-tests
+nb_sample_array = np.array([10,100,1000,5000,10000,1000000])
+sample_str = []
+nb_repet = 20
+det_id = 1
+
+Redbird_Detection_probability_min = []
+Redbird_Detection_probability_max = []
+# Redbird_Detection_probability = []
+
+
+for nb_sample in nb_sample_array:
+    sample_str.append(str(nb_sample))
+    temp = []
+    for i in range(nb_repet):
+        val = Redbird_DR[det_id]/Redbird_Coeff[det_id]
+        temp.append(100*get_detection_proba(val, Redbird_sigma_p_phantom_detector[det_id], Redbird_mu_p_min[det_id],size_sample=nb_sample))
+
+    temp = np.asarray(temp)
+
+    # Redbird_Detection_probability.append(temp)
+    Redbird_Detection_probability_min.append(temp.min())
+    Redbird_Detection_probability_max.append(temp.max())
+
+
+Redbird_Detection_probability_min = np.asarray(Redbird_Detection_probability_min)
+Redbird_Detection_probability_max = np.asarray(Redbird_Detection_probability_max)
+# Redbird_Detection_probability = np.asarray(Redbird_Detection_probability)
+
+plt.close('all')
+plt.figure()
+plt.fill_between(np.arange(Redbird_Detection_probability_min.shape[0]), Redbird_Detection_probability_min, Redbird_Detection_probability_max,color='r',alpha=0.3)
+# plt.plot(nb_sample_array, Redbird_Detection_probability)
+# plt.yscale('symlog')
+plt.grid()
+plt.xlabel("Sample size used in one-sided T-tests",fontsize=ft)
+plt.ylabel("Detection probability (%)",fontsize=ft)
+plt.title("Area of dispersion of detection probability against sample size")
+plt.xticks(np.arange(nb_sample_array.shape[0]),np.asarray(sample_str))
 plt.show()

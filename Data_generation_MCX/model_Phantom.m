@@ -3,8 +3,8 @@
 clear
 close all
 
-run_in_cluster = 1;
-Nb_measure = 100;
+run_in_cluster = 0;
+Nb_measure = 1;
 
 % Repeat the simulation x times
 repetitions = 1;
@@ -120,6 +120,24 @@ mua_L2 mus_L2 g n ; ...
 mua_L3 mus_L3 g n ; ...
 mua_Bulk mus_Bulk g n];
 
+optical_prop.mua_skin = mua_L1;
+optical_prop.mu_s_skin = mus_L1;
+optical_prop.g_skin = g;
+optical_prop.n_skin = n;
+optical_prop.mua_adipose = mua_L2;
+optical_prop.mu_s_adipose = mus_L2;
+optical_prop.g_adipose = g;
+optical_prop.n_adipose = n;
+optical_prop.mua_muscle = mua_L3;
+optical_prop.mu_s_muscle =mus_L3;
+optical_prop.g_muscle = g;
+optical_prop.n_muscle = n;
+optical_prop.mua_placenta = mua_Bulk;
+optical_prop.mu_s_placenta = mus_Bulk;
+optical_prop.g_placenta = g;
+optical_prop.n_placenta = n;
+
+
 
             
 %Indexes of layers along z axis
@@ -151,16 +169,18 @@ slice_tissue = squeeze(cfg.vol(floor(volume_square_size/2),floor(volume_square_s
                         
 %Init output
 Diffuse_reflectance = zeros(length(detectors_SD_mm),Nb_measure);
-DR_at_fiber_detector= zeros(length(detectors_SD_mm),Nb_measure);
-Fluence_at_fiber_detector= zeros(length(detectors_SD_mm),Nb_measure);
-
+DR_at_fiber_detector = zeros(size(Diffuse_reflectance));
+Fluence_at_fiber_detector = zeros(size(Diffuse_reflectance));
+Sensitivity_profile_vec = zeros(volume_square_size,volume_square_size,volume_square_size,size(det_pos,1));
 
 %Process simulation with light source at the source
 %position
 cfg.srcpos=src_pos;
 
 
+
 for n=1:Nb_measure
+
     % Random seed to obtain different results when running multiple simulations for the same input parameters
     cfg.seed = randi([0,99999],1);
     
@@ -168,17 +188,38 @@ for n=1:Nb_measure
     [fluence,output_det]=mcxlab(cfg);
     
     % Detector pos
-    for i=1:length(det_pos)
+    for i=1:size(det_pos,1)
         %Diffuse reflectance
         Diffuse_reflectance(i,n) = fluence.dref(det_pos(i,1)+1,det_pos(i,2)+1,1);
     end
 
     % Calculate diffuse reflectance at fiber detector location using fluence
     [dr,flu] = get_Diffuse_reflectance_from_Fluence_MCX(fluence.data, det_pos, radius_fiber_det_mm, 0.1, optical_prop);
-    DR_at_fiber_detector(i,:) = dr;
-    Fluence_at_fiber_detector(i,:) = flu;
-end
 
+    DR_at_fiber_detector(:,n) = dr;
+    Fluence_at_fiber_detector(:,n) = flu;
+    
+    % Compute simulation at detector location
+    for d = 1:size(det_pos,1)
+        % Random seed to obtain different results when running multiple simulations for the same input parameters
+        cfg.seed = randi([0,99999],1);
+        
+        %Set light source position
+        cfg.srcpos= [src_pos(1) det_pos(d,2) src_pos(3)];
+
+        % calculate the fluence
+        [flux]=mcxlab(cfg);
+
+        %Calculate sensitivity profile
+        Sensitivity_profile = fluence.data.*flux.data;
+
+        %Normalize by the sum to get the density
+        %probability
+        Sensitivity_profile_vec(:,:,:,d) = Sensitivity_profile/sum(Sensitivity_profile,"all");
+    end
+
+
+end
 
 
 
@@ -189,6 +230,6 @@ save('out_Phantom.mat','Diffuse_reflectance',...
                         'det_pos','Lambdas','repetitions',...
                         'nphotons','model_resolution_in_mm',...
                         'L1_thickness_mm','L2_thickness_mm',...
-                        'L3_thickness_mm','slice_tissue','DR_at_fiber_detector','Fluence_at_fiber_detector');
+                        'L3_thickness_mm','slice_tissue','DR_at_fiber_detector','Fluence_at_fiber_detector','Sensitivity_profile_vec');
 
                

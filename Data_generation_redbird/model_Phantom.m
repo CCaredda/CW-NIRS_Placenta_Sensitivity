@@ -79,6 +79,6 @@ fprintf(1,strcat('Calculating sensitivity index\n'));
 Sensitivity_indexes = get_sensitivity_index(cfg, sensitivity_profile, thickness_layers_mm);
 
 
-save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector','Fluence_at_fiber_detector');
+save(strcat('Phantom_Data_',num2str(Lambdas),'.mat'),'sensitivity_profile','Phi_detval','Sensitivity_indexes', 'DR_at_fiber_detector','Fluence_at_fiber_detector');
 
 
