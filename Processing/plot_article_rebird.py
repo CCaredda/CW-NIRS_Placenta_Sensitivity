@@ -696,7 +696,8 @@ ft_text = 12
 
 plt.rcParams.update({'font.size': ft_label})
 
-skin_thickness_subject_mm = np.array([2, 2, 2, 2])
+# skin_thickness_subject_mm = np.array([2, 2, 2, 2])
+skin_thickness_subject_mm = np.array([3, 3, 3, 3])
 adipose_thickness_subject_mm = np.array([2, 4, 5, 7])
 muscle_thickness_subject_mm = np.array([7, 10, 12, 17])
 dist_to_plancenta_subjects_mm = skin_thickness_subject_mm + adipose_thickness_subject_mm + muscle_thickness_subject_mm
@@ -711,7 +712,7 @@ cmap = cm.plasma
 
 
 binning = 1
-int_time_s = 1
+int_time_s = 10
 #Get mup min
 mu_p_min, sigma_p_phantom_detector, Coeff = get_minimum_sensitivity_threshold_normalization(binning,Intensity_measured[np.where(int_time_s == integration_time_s)[0][0]],dr_phantom)
 
@@ -807,7 +808,7 @@ for i in range(skin_thickness_subject_mm.shape[0]):
 
 plt.close('all')
 fig1 = plt.figure(tight_layout=True)
-plt.suptitle("Effect of the skin thickness on detection probability",fontsize=ft)
+plt.suptitle("Effect of the skin thickness on detection probability - Integration time "+str(int_time_s)+" s binning "+str(binning),fontsize=ft)
 
 
 
@@ -1248,7 +1249,7 @@ for id_mel in range(f_melanosome.shape[0]):
 
 
         cb = fig1.colorbar(im, ax=ax1)
-        cb.set_label("Placenta sensitivity (%)",fontsize=ft_label)
+        cb.set_label("Probability (%)",fontsize=ft_label)
         ax1.set_xticks(x)  # Set x ticks to vector values
         ax1.set_yticks(y)  # Set y ticks to vector values
         ax1.set_xlabel("Source detector separation (mm)",fontsize=ft)
@@ -1262,8 +1263,8 @@ plt.show()
 
 wavelength = 780
 
-method = "MCX"
-# method = "Redbird"
+# method = "MCX"
+method = "Redbird"
 
 
 data_to_load = 'DR_at_fiber_detector'
@@ -1283,13 +1284,10 @@ SD_separation_cm = np.array([3, 4, 5])
 SD_labels = np.array(["30","40","50"])
 
 
-ft = 23
-ft_legend = 20
-# ft = 16
-# ft_legend = 15
+
 c = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-plt.rcParams.update({'font.size': ft})
+
 
 P_detection_m = []
 P_scanning_m = []
@@ -1350,6 +1348,13 @@ for int_time_s in np.array([1,5,10]):
         id += 1
 
 
+##
+# ft = 23
+# ft_legend = 20
+ft = 20
+ft_legend = 20
+plt.rcParams.update({'font.size': ft})
+
 plt.close('all')
 fig = plt.figure(tight_layout=True)
 gs = gridspec.GridSpec(4, 1, height_ratios=[1, 1, 0.1, 1])
@@ -1377,7 +1382,7 @@ ax.set_ylim(0,100)
 #Detection probability
 ax = fig.add_subplot(gs[1,0])
 
-title = "Detection probability"
+title = "Proportion of subjects having a detection probability of 100 %"
 if method == "MCX":
     title+= " (MCX)"
 
@@ -1389,12 +1394,13 @@ plots['cmeans'].set_colors(c[id])
 # plots['cquantiles'].set_color('r')
 ax.set_xticks(np.array([3.5,9.5,15.5]))
 ax.set_xticklabels(SD_labels,fontsize=ft)
-ax.set_ylabel("Probability (%)",fontsize = ft)
+ax.set_ylabel("Proportion (%)",fontsize = ft)
 ax.set_xlabel("Source-detector separation (mm)",fontsize = ft)
 ax.axvline(6.5,0,100,color='k',linewidth=3)
 ax.axvline(12.5,0,100,color='k',linewidth=3)
 ax.grid()
 ax.set_ylim(0,100)
+
 
 # ax.legend(handles=patches,loc="upper right", bbox_to_anchor=(1.02, 1.0) ,fontsize = ft)
 
@@ -1587,6 +1593,7 @@ ax12.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","
 ax12.tick_params(axis='both', which='major', labelsize=ft)
 ax12.set_yscale('log')
 ax12.grid()
+ax12.set_ylim(0,5e5)
 
 ax22.set_title("Standard deviation values of Mini-CYRIL signal",fontsize=ft)
 ax22.legend(loc="best",fontsize=ft_legend)
@@ -1596,6 +1603,7 @@ ax22.set_xticks(np.arange(SD_separations_mm.shape[0])+3*width/2,np.array(["30","
 ax22.grid()
 ax22.set_yscale('log')
 ax22.tick_params(axis='both', which='major', labelsize=ft)
+ax22.set_ylim(0,1e3)
 
 ax32.set_title("SNR of Mini CYRIL device",fontsize=ft)
 ax32.legend(loc="best",fontsize=ft_legend)
