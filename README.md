@@ -1,7 +1,7 @@
 # A Digital Instrument Simulator Platform to Support the Development of Non-Invasive Optical NIR Device for placenta monitoring
 
 
-Charly Caredda, Frédéric Lange, Niccole Ranaei-Zamani, Uzair Hakim, Olayinka Kowobari, Dimitrios Siassakos, Sara Hillman, Anna L. David, Subhabrata Mitra, Ilias Tachtsidis, "Digital instrument simulator platform to support the development of noninvasive optical NIR device for placenta monitoring," J. Biomed. Opt. 31(2) 027003 (20 February 2026) \url{https://doi.org/10.1117/1.JBO.31.2.027003}
+Charly Caredda, Frédéric Lange, Niccole Ranaei-Zamani, Uzair Hakim, Olayinka Kowobari, Dimitrios Siassakos, Sara Hillman, Anna L. David, Subhabrata Mitra, Ilias Tachtsidis, "Digital instrument simulator platform to support the development of noninvasive optical NIR device for placenta monitoring," J. Biomed. Opt. 31(2) 027003 (20 February 2026) https://doi.org/10.1117/1.JBO.31.2.027003
 
 
 ## Light propagation with Monte Carlo simulations
